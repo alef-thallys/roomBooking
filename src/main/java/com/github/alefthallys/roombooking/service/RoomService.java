@@ -1,28 +1,37 @@
 package com.github.alefthallys.roombooking.service;
 
 import com.github.alefthallys.roombooking.model.Room;
+import com.github.alefthallys.roombooking.repositories.RoomRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class RoomService {
 	
-	public String findAll() {
-		return "List of rooms";
+	private final RoomRepository roomRepository;
+	
+	public RoomService(RoomRepository roomRepository) {
+		this.roomRepository = roomRepository;
 	}
 	
-	public String findById(Long id) {
-		return "Room by id";
+	public List<Room> findAll() {
+		return roomRepository.findAll();
 	}
 	
-	public String create(Room room) {
-		return "Room created";
+	public Room findById(Long id) {
+		return roomRepository.findById(id).orElse(null);
 	}
 	
-	public String update(Long id, Room room) {
-		return "Room updated";
+	public Room create(Room room) {
+		return roomRepository.save(room);
 	}
 	
-	public String delete(Long id) {
-		return "Room deleted";
+	public Room update(Long id, Room room) {
+		return roomRepository.save(room);
+	}
+	
+	public void delete(Long id) {
+		roomRepository.deleteById(id);
 	}
 }

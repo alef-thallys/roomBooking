@@ -35,7 +35,7 @@ public class User implements Serializable {
 		return Objects.hash(getId(), getName(), getEmail(), getPassword(), getPhone(), getRole());
 	}
 	
-	private enum Role {
+	public enum Role {
 		ADMIN,
 		USER
 	}

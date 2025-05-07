@@ -1,28 +1,37 @@
 package com.github.alefthallys.roombooking.service;
 
 import com.github.alefthallys.roombooking.model.User;
+import com.github.alefthallys.roombooking.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
 	
-	public String findAll() {
-		return "List of users";
+	private final UserRepository userRepository;
+	
+	public UserService(UserRepository userRepository) {
+		this.userRepository = userRepository;
 	}
 	
-	public String findById(Long id) {
-		return "User by id";
+	public List<User> findAll() {
+		return userRepository.findAll();
 	}
 	
-	public String create(User user) {
-		return "User created";
+	public User findById(Long id) {
+		return userRepository.findById(id).orElse(null);
 	}
 	
-	public String update(Long id, User user) {
-		return "User updated";
+	public User create(User user) {
+		return userRepository.save(user);
 	}
 	
-	public String delete(Long id) {
-		return "User deleted";
+	public User update(Long id, User user) {
+		return userRepository.save(user);
+	}
+	
+	public void delete(Long id) {
+		userRepository.deleteById(id);
 	}
 }
