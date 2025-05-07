@@ -1,7 +1,8 @@
-package com.github.alefthallys.roombooking.service;
+package com.github.alefthallys.userbooking.service;
 
 import com.github.alefthallys.roombooking.model.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
+import com.github.alefthallys.roombooking.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,10 +67,15 @@ class UserServiceTest {
 	
 	@Test
 	void update() {
-		when(userRepository.save(user)).thenReturn(user);
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(userRepository.save(any(User.class))).thenReturn(user);
+		
 		User result = userService.update(1L, user);
 		
-		verify(userRepository, times(1)).save(user);
+		assertEquals(user, result);
+		
+		verify(userRepository, times(1)).save(any(User.class));
+		verify(userRepository, times(1)).findById(1L);
 		verifyNoMoreInteractions(userRepository);
 	}
 	

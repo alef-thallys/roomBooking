@@ -28,7 +28,8 @@ public class UserService {
 	}
 	
 	public User update(Long id, User user) {
-		return userRepository.save(user);
+		User userToUpdate = userRepository.findById(id).orElse(null);
+		return userRepository.save(userToUpdate);
 	}
 	
 	public void delete(Long id) {

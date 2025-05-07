@@ -28,7 +28,8 @@ public class RoomService {
 	}
 	
 	public Room update(Long id, Room room) {
-		return roomRepository.save(room);
+		Room roomToUpdate = roomRepository.findById(id).orElse(null);
+		return roomRepository.save(roomToUpdate);
 	}
 	
 	public void delete(Long id) {

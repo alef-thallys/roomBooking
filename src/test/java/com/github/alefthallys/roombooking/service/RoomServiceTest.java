@@ -66,12 +66,18 @@ class RoomServiceTest {
 	
 	@Test
 	void update() {
-		when(roomRepository.save(room)).thenReturn(room);
+		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+		when(roomRepository.save(any(Room.class))).thenReturn(room);
+		
 		Room result = roomService.update(1L, room);
 		
-		verify(roomRepository, times(1)).save(room);
+		assertEquals(room, result);
+		
+		verify(roomRepository, times(1)).save(any(Room.class));
+		verify(roomRepository, times(1)).findById(1L);
 		verifyNoMoreInteractions(roomRepository);
 	}
+	
 	
 	@Test
 	void delete() {
