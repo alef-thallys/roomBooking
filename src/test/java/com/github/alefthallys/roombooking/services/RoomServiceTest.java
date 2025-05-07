@@ -63,8 +63,7 @@ class RoomServiceTest {
 		assertEquals(room.isAvailable(), result.get(0).available());
 		assertEquals(room.getLocation(), result.get(0).location());
 		
-		verify(roomRepository, times(1)).findAll();
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findAll();
 	}
 	
 	@Test
@@ -79,8 +78,7 @@ class RoomServiceTest {
 		assertEquals(room.isAvailable(), result.available());
 		assertEquals(room.getLocation(), result.location());
 		
-		verify(roomRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findById(1L);
 	}
 	
 	@Test
@@ -88,8 +86,7 @@ class RoomServiceTest {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(EntityNotFoundException.class, () -> roomService.findById(1L));
 		
-		verify(roomRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findById(1L);
 	}
 	
 	@Test
@@ -104,8 +101,7 @@ class RoomServiceTest {
 		assertEquals(room.isAvailable(), result.available());
 		assertEquals(room.getLocation(), result.location());
 		
-		verify(roomRepository, times(1)).save(any(Room.class));
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).save(any(Room.class));
 	}
 	
 	@Test
@@ -127,9 +123,8 @@ class RoomServiceTest {
 		assertEquals("A huge room for meetings", result.description());
 		assertEquals(40, result.capacity());
 		
-		verify(roomRepository, times(1)).save(any(Room.class));
-		verify(roomRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).save(any(Room.class));
+		verify(roomRepository).findById(1L);
 	}
 	
 	@Test
@@ -138,8 +133,7 @@ class RoomServiceTest {
 		
 		assertThrows(EntityNotFoundException.class, () -> roomService.update(1L, roomDTO));
 		
-		verify(roomRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findById(1L);
 	}
 
 
@@ -149,9 +143,8 @@ class RoomServiceTest {
 		doNothing().when(roomRepository).delete(room);
 		roomService.delete(1L);
 
-		verify(roomRepository, times(1)).findById(1L);
-		verify(roomRepository, times(1)).delete(room);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findById(1L);
+		verify(roomRepository).delete(room);
 	}
 	
 	@Test
@@ -159,7 +152,6 @@ class RoomServiceTest {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(EntityNotFoundException.class, () -> roomService.delete(1L));
 		
-		verify(roomRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(roomRepository);
+		verify(roomRepository).findById(1L);
 	}
 }

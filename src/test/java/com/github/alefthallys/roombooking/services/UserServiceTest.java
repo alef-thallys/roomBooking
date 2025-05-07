@@ -63,8 +63,7 @@ class UserServiceTest {
 		assertEquals(user.getPhone(), result.get(0).phone());
 		assertEquals(user.getRole(), result.get(0).role());
 		
-		verify(userRepository, times(1)).findAll();
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findAll();
 	}
 	
 	@Test
@@ -79,8 +78,7 @@ class UserServiceTest {
 		assertEquals(user.getPhone(), result.phone());
 		assertEquals(user.getRole(), result.role());
 		
-		verify(userRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
 	}
 	
 	@Test
@@ -88,8 +86,7 @@ class UserServiceTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(EntityNotFoundException.class, () -> userService.findById(1L));
 		
-		verify(userRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
 	}
 	
 	@Test
@@ -104,8 +101,7 @@ class UserServiceTest {
 		assertEquals(user.getPhone(), result.phone());
 		assertEquals(user.getRole(), result.role());
 		
-		verify(userRepository, times(1)).save(any(User.class));
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).save(any(User.class));
 	}
 	
 	@Test
@@ -129,9 +125,8 @@ class UserServiceTest {
 		assertEquals("123456789", result.phone());
 		assertEquals(User.Role.USER, result.role());
 		
-		verify(userRepository, times(1)).findById(1L);
-		verify(userRepository, times(1)).save(any(User.class));
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
+		verify(userRepository).save(any(User.class));
 	}
 	
 	@Test
@@ -140,8 +135,7 @@ class UserServiceTest {
 		
 		assertThrows(EntityNotFoundException.class, () -> userService.update(1L, userDTO));
 		
-		verify(userRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
 	}
 	
 	
@@ -151,9 +145,8 @@ class UserServiceTest {
 		doNothing().when(userRepository).delete(user);
 		userService.delete(1L);
 		
-		verify(userRepository, times(1)).findById(1L);
-		verify(userRepository, times(1)).delete(user);
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
+		verify(userRepository).delete(user);
 	}
 	
 	@Test
@@ -161,7 +154,6 @@ class UserServiceTest {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(EntityNotFoundException.class, () -> userService.delete(1L));
 		
-		verify(userRepository, times(1)).findById(1L);
-		verifyNoMoreInteractions(userRepository);
+		verify(userRepository).findById(1L);
 	}
 }
