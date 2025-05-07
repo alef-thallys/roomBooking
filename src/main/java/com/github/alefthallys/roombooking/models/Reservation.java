@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.model;
+package com.github.alefthallys.roombooking.models;
 
 import lombok.*;
 

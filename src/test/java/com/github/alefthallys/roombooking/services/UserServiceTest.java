@@ -1,0 +1,167 @@
+package com.github.alefthallys.roombooking.services;
+
+import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.models.User;
+import com.github.alefthallys.roombooking.repositories.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceTest {
+	
+	@InjectMocks
+	private UserService userService;
+	
+	@Mock
+	private UserRepository userRepository;
+	
+	private User user;
+	private UserDTO userDTO;
+	
+	@BeforeEach
+	void setUp() {
+		user = new User();
+		user.setId(1L);
+		user.setName("John Doe");
+		user.setEmail("john@gmail.com");
+		user.setPassword("password");
+		user.setPhone("123456789");
+		user.setRole(User.Role.USER);
+		
+		userDTO = new UserDTO(
+				1L,
+				"John Doe",
+				"john@gmail.com",
+				"password",
+				"123456789",
+				User.Role.USER
+		);
+	}
+	
+	@Test
+	void findAll() {
+		when(userRepository.findAll()).thenReturn(List.of(user));
+		List<UserDTO> result = userService.findAll();
+		
+		assertEquals(1, result.size());
+		assertEquals(user.getId(), result.get(0).id());
+		assertEquals(user.getName(), result.get(0).name());
+		assertEquals(user.getEmail(), result.get(0).email());
+		assertEquals(user.getPassword(), result.get(0).password());
+		assertEquals(user.getPhone(), result.get(0).phone());
+		assertEquals(user.getRole(), result.get(0).role());
+		
+		verify(userRepository, times(1)).findAll();
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void findById() {
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		UserDTO result = userService.findById(1L);
+		
+		assertEquals(user.getId(), result.id());
+		assertEquals(user.getName(), result.name());
+		assertEquals(user.getEmail(), result.email());
+		assertEquals(user.getPassword(), result.password());
+		assertEquals(user.getPhone(), result.phone());
+		assertEquals(user.getRole(), result.role());
+		
+		verify(userRepository, times(1)).findById(1L);
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void findById_shouldThrowException_whenUserNotFound() {
+		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(EntityNotFoundException.class, () -> userService.findById(1L));
+		
+		verify(userRepository, times(1)).findById(1L);
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void create() {
+		when(userRepository.save(user)).thenReturn(user);
+		UserDTO result = userService.create(userDTO);
+		
+		assertEquals(user.getId(), result.id());
+		assertEquals(user.getName(), result.name());
+		assertEquals(user.getEmail(), result.email());
+		assertEquals(user.getPassword(), result.password());
+		assertEquals(user.getPhone(), result.phone());
+		assertEquals(user.getRole(), result.role());
+		
+		verify(userRepository, times(1)).save(any(User.class));
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void update() {
+		UserDTO updated = new UserDTO(
+				1L,
+				"Mary Doe",
+				"mary@gmail.com",
+				"password",
+				"123456789",
+				User.Role.USER
+		);
+		
+		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		UserDTO result = userService.update(1L, updated);
+		
+		assertEquals("Mary Doe", result.name());
+		assertEquals("mary@gmail.com", result.email());
+		assertEquals("password", result.password());
+		assertEquals("123456789", result.phone());
+		assertEquals(User.Role.USER, result.role());
+		
+		verify(userRepository, times(1)).findById(1L);
+		verify(userRepository, times(1)).save(any(User.class));
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void update_shouldThrowException_whenUserNotFound() {
+		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+		
+		assertThrows(EntityNotFoundException.class, () -> userService.update(1L, userDTO));
+		
+		verify(userRepository, times(1)).findById(1L);
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	
+	@Test
+	void delete() {
+		when(userRepository.findById(1L)).thenReturn(Optional.ofNullable(user));
+		doNothing().when(userRepository).delete(user);
+		userService.delete(1L);
+		
+		verify(userRepository, times(1)).findById(1L);
+		verify(userRepository, times(1)).delete(user);
+		verifyNoMoreInteractions(userRepository);
+	}
+	
+	@Test
+	void delete_shouldThrowException_whenUserNotFound() {
+		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(EntityNotFoundException.class, () -> userService.delete(1L));
+		
+		verify(userRepository, times(1)).findById(1L);
+		verifyNoMoreInteractions(userRepository);
+	}
+}

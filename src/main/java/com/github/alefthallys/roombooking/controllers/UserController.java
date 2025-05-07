@@ -1,7 +1,8 @@
-package com.github.alefthallys.roombooking.controller;
+package com.github.alefthallys.roombooking.controllers;
 
-import com.github.alefthallys.roombooking.model.User;
-import com.github.alefthallys.roombooking.service.UserService;
+import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.models.User;
+import com.github.alefthallys.roombooking.services.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,25 +18,25 @@ public class UserController {
 	}
 	
 	@GetMapping
-	public List<User> findAll() {
+	public List<UserDTO> findAll() {
 		return userService.findAll();
 	}
 	
 	@GetMapping("/{id}")
-	public User findById(@PathVariable Long id) {
+	public UserDTO findById(@PathVariable Long id) {
 		return userService.findById(id);
 	}
 	
 	@PostMapping
-	public User create(@RequestBody User user) {
-		return userService.create(user);
+	public UserDTO create(@RequestBody UserDTO userDTO) {
+		return userService.create(userDTO);
 	}
 	
 	@PutMapping("/{id}")
-	public User update(@PathVariable Long id, @RequestBody User user) {
-		return userService.update(id, user);
+	public UserDTO update(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+		return userService.update(id, userDTO);
 	}
-	
+
 	@DeleteMapping("/{id}")
 	public void delete(@PathVariable Long id) {
 		userService.delete(id);
