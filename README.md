@@ -1,6 +1,8 @@
 # RoomyBooking Backend
 
-**RoomyBooking** é um backend robusto e escalável para o gerenciamento de reservas de salas. Implementado com **Java 17+**, **Spring Boot 3.4.5** e Arquitetura Clean/Hexagonal, o projeto oferece autenticação segura, comunicação assíncrona e deploy local com Docker.
+**RoomyBooking** é um backend robusto e escalável para o gerenciamento de reservas de salas. Implementado com **Java 17+
+**, **Spring Boot 3.4.5** e Arquitetura Clean/Hexagonal, o projeto oferece autenticação segura, comunicação assíncrona e
+deploy local com Docker.
 
 ## Funcionalidades
 
