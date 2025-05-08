@@ -1,10 +1,11 @@
 package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.mappers.UserMapper;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,17 +26,22 @@ public class UserService {
 	}
 	
 	public UserDTO findById(Long id) {
-		User user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+		User user = userRepository.findById(id).orElseThrow(() -> new EntityUserNotFoundException(id));
 		return UserMapper.toDto(user);
 	}
 	
 	public UserDTO create(UserDTO userDTO) {
+		if (userRepository.existsByEmail((userDTO.email()))) {
+			throw new EntityUserAlreadyExistsException(userDTO.email());
+		}
+		
 		User userToSave = UserMapper.toEntity(userDTO);
 		return UserMapper.toDto(userRepository.save(userToSave));
 	}
 	
 	public UserDTO update(Long id, UserDTO userDTO) {
-		User userToUpdate = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+		User userToUpdate = userRepository.findById(id).orElseThrow(
+				() -> new EntityUserNotFoundException(id));
 		
 		userToUpdate.setName(userDTO.name());
 		userToUpdate.setEmail(userDTO.email());
@@ -47,7 +53,8 @@ public class UserService {
 	}
 	
 	public void delete(Long id) {
-		User userById = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+		User userById = userRepository.findById(id).orElseThrow(
+				() -> new EntityUserNotFoundException(id));
 		userRepository.delete(userById);
 	}
 }

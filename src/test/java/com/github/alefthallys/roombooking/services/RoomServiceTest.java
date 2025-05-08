@@ -1,9 +1,9 @@
 package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,7 +84,7 @@ class RoomServiceTest {
 	@Test
 	void findById_shouldThrowException_whenRoomNotFound() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> roomService.findById(1L));
+		assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(1L));
 		
 		verify(roomRepository).findById(1L);
 	}
@@ -131,7 +131,7 @@ class RoomServiceTest {
 	void update_shouldThrowException_whenRoomNotFound() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 		
-		assertThrows(EntityNotFoundException.class, () -> roomService.update(1L, roomDTO));
+		assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(1L, roomDTO));
 		
 		verify(roomRepository).findById(1L);
 	}
@@ -150,7 +150,7 @@ class RoomServiceTest {
 	@Test
 	void delete_shouldThrowException_whenRoomNotFound() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> roomService.delete(1L));
+		assertThrows(EntityRoomNotFoundException.class, () -> roomService.delete(1L));
 		
 		verify(roomRepository).findById(1L);
 	}

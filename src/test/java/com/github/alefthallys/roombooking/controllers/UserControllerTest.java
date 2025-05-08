@@ -2,9 +2,10 @@ package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.services.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -25,17 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 	
+	private final String urlPrefix = "/api/v1/users";
 	@Autowired
 	private MockMvc mockMvc;
-	
 	@Autowired
 	private ObjectMapper objectMapper;
-	
 	@MockitoBean
 	private UserService userService;
-	
 	private UserDTO userDTO;
-	private final String urlPrefix = "/api/v1/users";
 	
 	@BeforeEach
 	void setUp() {
@@ -65,12 +62,21 @@ class UserControllerTest {
 	void shouldReturnUserById() throws Exception {
 		when(userService.findById(1L)).thenReturn(userDTO);
 		
-		mockMvc.perform(get(urlPrefix + "/1"))
+		mockMvc.perform(get(urlPrefix + "/{id}", 1L))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(userDTO.id()))
 				.andExpect(jsonPath("$.name").value(userDTO.name()))
 				.andExpect(jsonPath("$.email").value(userDTO.email()))
 				.andExpect(jsonPath("$.phone").value(userDTO.phone()));
+	}
+	
+	@Test
+	void shouldThrowEntityUserNotFoundException() throws Exception {
+		when(userService.findById(1L)).thenThrow(new EntityUserNotFoundException(1L));
+		
+		mockMvc.perform(get(urlPrefix + "/{id}", 1L))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 	}
 	
 	@Test
@@ -88,10 +94,21 @@ class UserControllerTest {
 	}
 	
 	@Test
+	void shouldThrowEntityUserAlreadyExistsExceptionOnCreate() throws Exception {
+		when(userService.create(userDTO)).thenThrow(new EntityUserAlreadyExistsException(userDTO.email()));
+		
+		mockMvc.perform(post(urlPrefix)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(userDTO)))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message").value("User already exists with email: " + userDTO.email()));
+	}
+	
+	@Test
 	void shouldUpdateUser() throws Exception {
 		when(userService.update(1L, userDTO)).thenReturn(userDTO);
 		
-		mockMvc.perform(put(urlPrefix + "/1")
+		mockMvc.perform(put(urlPrefix + "/{id}", 1L)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(userDTO)))
 				.andExpect(status().isOk())
@@ -102,10 +119,32 @@ class UserControllerTest {
 	}
 	
 	@Test
+	void shouldThrowEntityUserNotFoundExceptionOnUpdate() throws Exception {
+		when(userService.update(1L, userDTO)).thenThrow(new EntityUserNotFoundException(1L));
+		
+		mockMvc.perform(put(urlPrefix + "/{id}", 1L)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(userDTO)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
+	}
+	
+	@Test
 	void shouldDeleteUserById() throws Exception {
 		doNothing().when(userService).delete(1L);
 		
-		mockMvc.perform(delete(urlPrefix + "/1"))
+		mockMvc.perform(delete(urlPrefix + "/{id}", 1L))
 				.andExpect(status().isNoContent());
+	}
+	
+	@Test
+	void shouldThrowEntityUserNotFoundExceptionOnDelete() throws Exception {
+		doThrow(new EntityUserNotFoundException(1L))
+				.when(userService)
+				.delete(1L);
+		
+		mockMvc.perform(delete(urlPrefix + "/{id}", 1L))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 	}
 }

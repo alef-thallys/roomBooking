@@ -1,9 +1,9 @@
 package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,7 +84,7 @@ class UserServiceTest {
 	@Test
 	void findById_shouldThrowException_whenUserNotFound() {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> userService.findById(1L));
+		assertThrows(EntityUserNotFoundException.class, () -> userService.findById(1L));
 		
 		verify(userRepository).findById(1L);
 	}
@@ -133,7 +133,7 @@ class UserServiceTest {
 	void update_shouldThrowException_whenUserNotFound() {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 		
-		assertThrows(EntityNotFoundException.class, () -> userService.update(1L, userDTO));
+		assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userDTO));
 		
 		verify(userRepository).findById(1L);
 	}
@@ -152,7 +152,7 @@ class UserServiceTest {
 	@Test
 	void delete_shouldThrowException_whenUserNotFound() {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> userService.delete(1L));
+		assertThrows(EntityUserNotFoundException.class, () -> userService.delete(1L));
 		
 		verify(userRepository).findById(1L);
 	}
