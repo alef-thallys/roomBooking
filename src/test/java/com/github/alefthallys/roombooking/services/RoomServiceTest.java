@@ -135,14 +135,14 @@ class RoomServiceTest {
 		
 		verify(roomRepository).findById(1L);
 	}
-
-
+	
+	
 	@Test
 	void delete() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
 		doNothing().when(roomRepository).delete(room);
 		roomService.delete(1L);
-
+		
 		verify(roomRepository).findById(1L);
 		verify(roomRepository).delete(room);
 	}

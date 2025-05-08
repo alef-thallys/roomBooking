@@ -30,12 +30,12 @@ public class RoomController {
 	public RoomDTO create(@RequestBody RoomDTO room) {
 		return roomService.create(room);
 	}
-
+	
 	@PutMapping("/{id}")
 	public RoomDTO update(@PathVariable Long id, @RequestBody RoomDTO room) {
 		return roomService.update(id, room);
 	}
-
+	
 	@DeleteMapping("/{id}")
 	public void delete(@PathVariable Long id) {
 		roomService.delete(id);

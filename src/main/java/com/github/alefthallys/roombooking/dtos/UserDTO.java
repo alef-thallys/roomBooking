@@ -2,7 +2,6 @@ package com.github.alefthallys.roombooking.dtos;
 
 import com.github.alefthallys.roombooking.models.User;
 
-
 public record UserDTO(
 		Long id,
 		String name,
