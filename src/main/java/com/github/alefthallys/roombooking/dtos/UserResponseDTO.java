@@ -1,12 +1,13 @@
 package com.github.alefthallys.roombooking.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.alefthallys.roombooking.models.User;
 
-public record UserDTO(
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record UserResponseDTO(
 		Long id,
 		String name,
 		String email,
-		String password,
 		String phone,
 		User.Role role
 ) {
