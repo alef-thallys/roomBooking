@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
@@ -23,12 +24,11 @@ class UserServiceTest {
 	
 	@InjectMocks
 	private UserService userService;
-	
 	@Mock
 	private UserRepository userRepository;
-	
 	private User user;
-	private UserDTO userDTO;
+	private UserRequestDTO userRequestDTO;
+	private UserResponseDTO userResponseDTO;
 	
 	@BeforeEach
 	void setUp() {
@@ -40,11 +40,17 @@ class UserServiceTest {
 		user.setPhone("123456789");
 		user.setRole(User.Role.USER);
 		
-		userDTO = new UserDTO(
+		userRequestDTO = new UserRequestDTO(
+				"John Doe",
+				"john@gmail.com",
+				"123456789",
+				"password"
+		);
+		
+		userResponseDTO = new UserResponseDTO(
 				1L,
 				"John Doe",
 				"john@gmail.com",
-				"password",
 				"123456789",
 				User.Role.USER
 		);
@@ -53,13 +59,12 @@ class UserServiceTest {
 	@Test
 	void findAll() {
 		when(userRepository.findAll()).thenReturn(List.of(user));
-		List<UserDTO> result = userService.findAll();
+		List<UserResponseDTO> result = userService.findAll();
 		
 		assertEquals(1, result.size());
 		assertEquals(user.getId(), result.get(0).id());
 		assertEquals(user.getName(), result.get(0).name());
 		assertEquals(user.getEmail(), result.get(0).email());
-		assertEquals(user.getPassword(), result.get(0).password());
 		assertEquals(user.getPhone(), result.get(0).phone());
 		assertEquals(user.getRole(), result.get(0).role());
 		
@@ -69,12 +74,11 @@ class UserServiceTest {
 	@Test
 	void findById() {
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-		UserDTO result = userService.findById(1L);
+		UserResponseDTO result = userService.findById(1L);
 		
 		assertEquals(user.getId(), result.id());
 		assertEquals(user.getName(), result.name());
 		assertEquals(user.getEmail(), result.email());
-		assertEquals(user.getPassword(), result.password());
 		assertEquals(user.getPhone(), result.phone());
 		assertEquals(user.getRole(), result.role());
 		
@@ -91,13 +95,12 @@ class UserServiceTest {
 	
 	@Test
 	void create() {
-		when(userRepository.save(user)).thenReturn(user);
-		UserDTO result = userService.create(userDTO);
+		when(userRepository.save(any(User.class))).thenReturn(user);
+		UserResponseDTO result = userService.create(userRequestDTO);
 		
 		assertEquals(user.getId(), result.id());
 		assertEquals(user.getName(), result.name());
 		assertEquals(user.getEmail(), result.email());
-		assertEquals(user.getPassword(), result.password());
 		assertEquals(user.getPhone(), result.phone());
 		assertEquals(user.getRole(), result.role());
 		
@@ -106,22 +109,19 @@ class UserServiceTest {
 	
 	@Test
 	void update() {
-		UserDTO updated = new UserDTO(
-				1L,
+		UserRequestDTO updated = new UserRequestDTO(
 				"Mary Doe",
 				"mary@gmail.com",
 				"password",
-				"123456789",
-				User.Role.USER
+				"123456789"
 		);
 		
 		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		UserDTO result = userService.update(1L, updated);
+		UserResponseDTO result = userService.update(1L, updated);
 		
 		assertEquals("Mary Doe", result.name());
 		assertEquals("mary@gmail.com", result.email());
-		assertEquals("password", result.password());
 		assertEquals("123456789", result.phone());
 		assertEquals(User.Role.USER, result.role());
 		
@@ -133,7 +133,7 @@ class UserServiceTest {
 	void update_shouldThrowException_whenUserNotFound() {
 		when(userRepository.findById(1L)).thenReturn(Optional.empty());
 		
-		assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userDTO));
+		assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userRequestDTO));
 		
 		verify(userRepository).findById(1L);
 	}

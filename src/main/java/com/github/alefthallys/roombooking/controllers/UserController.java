@@ -1,7 +1,9 @@
 package com.github.alefthallys.roombooking.controllers;
 
-import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
 import com.github.alefthallys.roombooking.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +21,22 @@ public class UserController {
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<UserDTO>> findAll() {
+	public ResponseEntity<List<UserResponseDTO>> findAll() {
 		return ResponseEntity.ok(userService.findAll());
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
+	public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(userService.findById(id));
 	}
 	
 	@PostMapping
-	public ResponseEntity<UserDTO> create(@RequestBody UserDTO userDTO) {
+	public ResponseEntity<UserResponseDTO> create(@RequestBody @Valid UserRequestDTO userDTO) {
 		return new ResponseEntity<>(userService.create(userDTO), HttpStatus.CREATED);
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<UserDTO> update(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+	public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody UserRequestDTO userDTO) {
 		return ResponseEntity.ok(userService.update(id, userDTO));
 	}
 	

@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.UserDTO;
+import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.mappers.UserMapper;
@@ -19,18 +20,18 @@ public class UserService {
 		this.userRepository = userRepository;
 	}
 	
-	public List<UserDTO> findAll() {
+	public List<UserResponseDTO> findAll() {
 		return userRepository.findAll().stream()
 				.map(UserMapper::toDto)
 				.toList();
 	}
 	
-	public UserDTO findById(Long id) {
+	public UserResponseDTO findById(Long id) {
 		User user = userRepository.findById(id).orElseThrow(() -> new EntityUserNotFoundException(id));
 		return UserMapper.toDto(user);
 	}
 	
-	public UserDTO create(UserDTO userDTO) {
+	public UserResponseDTO create(UserRequestDTO userDTO) {
 		if (userRepository.existsByEmail((userDTO.email()))) {
 			throw new EntityUserAlreadyExistsException(userDTO.email());
 		}
@@ -39,7 +40,7 @@ public class UserService {
 		return UserMapper.toDto(userRepository.save(userToSave));
 	}
 	
-	public UserDTO update(Long id, UserDTO userDTO) {
+	public UserResponseDTO update(Long id, UserRequestDTO userDTO) {
 		User userToUpdate = userRepository.findById(id).orElseThrow(
 				() -> new EntityUserNotFoundException(id));
 		

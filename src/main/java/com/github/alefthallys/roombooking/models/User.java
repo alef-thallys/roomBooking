@@ -1,7 +1,12 @@
 package com.github.alefthallys.roombooking.models;
 
 import jakarta.persistence.*;
-import lombok.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,7 +17,6 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Table(name = "users")
 public class User implements Serializable {
 	
@@ -22,22 +26,43 @@ public class User implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@Column(nullable = false)
 	private String name;
+	
+	@Email
+	@Column(nullable = false, unique = true)
 	private String email;
+	
+	@Column(nullable = false)
 	private String password;
+	
+	@Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number")
+	@Column(nullable = false)
 	private String phone;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private Role role;
+	
+	public User(String name, String email, String password, String phone) {
+		this.name = name;
+		this.email = email;
+		this.password = password;
+		this.phone = phone;
+		this.role = Role.USER;
+	}
 	
 	@Override
 	public boolean equals(Object o) {
 		if (o == null || getClass() != o.getClass()) return false;
 		User user = (User) o;
-		return Objects.equals(getId(), user.getId()) && Objects.equals(getName(), user.getName()) && Objects.equals(getEmail(), user.getEmail()) && Objects.equals(getPassword(), user.getPassword()) && Objects.equals(getPhone(), user.getPhone()) && getRole() == user.getRole();
+		return Objects.equals(getId(), user.getId());
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(getId(), getName(), getEmail(), getPassword(), getPhone(), getRole());
+		return Objects.hashCode(getId());
 	}
 	
 	public enum Role {
