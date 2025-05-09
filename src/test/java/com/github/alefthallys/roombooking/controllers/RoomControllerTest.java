@@ -5,10 +5,13 @@ import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
 import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
+import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
+import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.RoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,15 +25,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoomController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class RoomControllerTest {
 	
 	private final String urlPrefix = "/api/v1/rooms";
+	
 	@Autowired
 	private MockMvc mockMvc;
+	
 	@Autowired
 	private ObjectMapper objectMapper;
+	
+	@MockitoBean
+	private JwtTokenProvider jwtTokenProvider;
+	
+	@MockitoBean
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
+	
 	@MockitoBean
 	private RoomService roomService;
+	
 	private RoomRequestDTO roomRequestDTO;
 	private RoomResponseDTO roomResponseDTO;
 	

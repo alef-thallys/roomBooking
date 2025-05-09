@@ -26,3 +26,16 @@ logging:
   level:
     root: warn
     com.github.alefthallys: info
+
+jwt:
+    secret: u4pHe1gHY!dnM8nAq3VJ@vLyxRs#TpBZrW7cZf96m2@qX9WmFS
+    expiration: 86400000
+    issuer: roomBooking
+    audience: roomBooking
+    header: Authorization
+    prefix: Bearer
+    token:
+        refresh:
+        expiration: 604800000
+        header: Refresh-Token
+        prefix: Refresh
