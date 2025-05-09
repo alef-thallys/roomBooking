@@ -24,10 +24,20 @@ public class Room implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@Column(nullable = false, unique = true)
 	private String name;
+	
+	@Column
 	private String description;
+	
+	@Column(nullable = false)
 	private int capacity;
+	
+	@Column(nullable = false)
 	private boolean available;
+	
+	@Column(nullable = false)
 	private String location;
 	
 	public Room(String name, String description, int capacity, boolean available, String location) {

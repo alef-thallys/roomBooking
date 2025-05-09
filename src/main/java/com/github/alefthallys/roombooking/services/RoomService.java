@@ -32,8 +32,8 @@ public class RoomService {
 	}
 	
 	public RoomResponseDTO create(RoomRequestDTO room) {
-		if (roomRepository.existsByDescription(room.description())) {
-			throw new EntityRoomAlreadyExistsException(room.description());
+		if (roomRepository.existsByName(room.name())) {
+			throw new EntityRoomAlreadyExistsException(room.name());
 		}
 		
 		Room roomToSave = RoomMapper.toEntity(room);

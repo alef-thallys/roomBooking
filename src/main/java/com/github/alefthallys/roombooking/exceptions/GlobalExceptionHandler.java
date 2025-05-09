@@ -81,7 +81,6 @@ public class GlobalExceptionHandler {
 		});
 		
 		ErrorResponseDTO response = new ErrorResponseDTO(
-				Instant.now(),
 				HttpStatus.BAD_REQUEST.value(),
 				"Constraint Violation",
 				request.getRequestURI(),

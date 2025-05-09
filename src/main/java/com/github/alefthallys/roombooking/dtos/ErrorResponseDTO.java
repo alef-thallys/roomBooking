@@ -14,5 +14,8 @@ public record ErrorResponseDTO(
 		String path,
 		Map<String, List<String>> fieldErrors
 ) {
+	public ErrorResponseDTO(int status, String error, String path, Map<String, List<String>> fieldErrors) {
+		this(Instant.now(), status, error, path, fieldErrors);
+	}
 }
 

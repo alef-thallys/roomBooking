@@ -54,11 +54,20 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- H2 Database -->
+        <!--MariaDB -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+        </dependency>
+
+        <!-- Flyway -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
         </dependency>
 
         <!-- Mockito -->
@@ -82,13 +91,25 @@
         </dependency>
     </dependencies>
 
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <configuration>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <url>${env.FLYWAY_DB_URL}</url>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <user>${env.FLYWAY_DB_USER}</user>
+                    <!--suppress UnresolvedMavenProperty -->
+                    <password>${env.FLYWAY_DB_PASSWORD}</password>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
 </project>

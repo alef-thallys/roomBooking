@@ -108,13 +108,13 @@ class RoomControllerTest {
 	
 	@Test
 	void shouldThrowEntityRoomAlreadyExistsExceptionOnCreate() throws Exception {
-		when(roomService.create(roomRequestDTO)).thenThrow(new EntityRoomAlreadyExistsException(roomRequestDTO.description()));
+		when(roomService.create(roomRequestDTO)).thenThrow(new EntityRoomAlreadyExistsException(roomRequestDTO.name()));
 		
 		mockMvc.perform(post(urlPrefix)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(roomRequestDTO)))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.message").value("Room already exists with description: " + roomRequestDTO.description()));
+				.andExpect(jsonPath("$.message").value("Room already exists with name: " + roomRequestDTO.name()));
 	}
 	
 	@Test

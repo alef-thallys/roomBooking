@@ -3,13 +3,26 @@ spring:
     name: roomBooking
 
   datasource:
-    url: jdbc:h2:mem:mydb
-    username: sa
-    password:
-    driverClassName: org.h2.Driver
-    h2:
-      console:
-        enabled: true
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/room_booking
+    username: root
+    password: 87249293a
+
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.MariaDBDialect
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+logging:
+  level:
+    root: warn
+    com.github.alefthallys: info
