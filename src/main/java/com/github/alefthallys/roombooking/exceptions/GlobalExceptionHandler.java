@@ -1,10 +1,19 @@
 package com.github.alefthallys.roombooking.exceptions;
 
 import com.github.alefthallys.roombooking.api.erros.ApiError;
+import com.github.alefthallys.roombooking.dtos.ErrorResponseDTO;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,12 +54,27 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
 	}
 	
-	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException ex) {
-		ApiError apiError = new ApiError(
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(
+			MethodArgumentNotValidException ex,
+			HttpServletRequest request) {
+		
+		Map<String, List<String>> errors = new HashMap<>();
+		
+		ex.getBindingResult().getFieldErrors().forEach(error -> {
+			String field = error.getField();
+			String message = error.getDefaultMessage();
+			errors.computeIfAbsent(field, key -> new ArrayList<>()).add(message);
+		});
+		
+		ErrorResponseDTO response = new ErrorResponseDTO(
+				LocalDateTime.now(),
 				HttpStatus.BAD_REQUEST.value(),
-				ex.getMessage()
+				"Validation Failed",
+				request.getRequestURI(),
+				errors
 		);
-		return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+		
+		return ResponseEntity.badRequest().body(response);
 	}
 }
