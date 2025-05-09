@@ -1,40 +1,16 @@
 package com.github.alefthallys.roombooking.api.erros;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.Instant;
 
-public class ApiError {
-	
-	private int status;
-	private String message;
-	private long timestamp;
-	
+public record ApiError(
+		int status,
+		String message,
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+		Instant timestamp
+) {
 	public ApiError(int status, String message) {
-		this.status = status;
-		this.message = message;
-		this.timestamp = Instant.now().toEpochMilli();
-	}
-	
-	public int getStatus() {
-		return status;
-	}
-	
-	public void setStatus(int status) {
-		this.status = status;
-	}
-	
-	public String getMessage() {
-		return message;
-	}
-	
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	
-	public long getTimestamp() {
-		return timestamp;
-	}
-	
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
+		this(status, message, Instant.now());
 	}
 }
