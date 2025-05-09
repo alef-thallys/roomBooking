@@ -30,6 +30,14 @@ public class Room implements Serializable {
 	private boolean available;
 	private String location;
 	
+	public Room(String name, String description, int capacity, boolean available, String location) {
+		this.name = name;
+		this.description = description;
+		this.capacity = capacity;
+		this.available = available;
+		this.location = location;
+	}
+	
 	@Override
 	public boolean equals(Object o) {
 		if (o == null || getClass() != o.getClass()) return false;

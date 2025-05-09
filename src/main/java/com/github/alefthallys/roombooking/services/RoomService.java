@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.mappers.RoomMapper;
@@ -19,27 +20,27 @@ public class RoomService {
 		this.roomRepository = roomRepository;
 	}
 	
-	public List<RoomDTO> findAll() {
+	public List<RoomResponseDTO> findAll() {
 		return roomRepository.findAll().stream()
 				.map(RoomMapper::toDto)
 				.toList();
 	}
 	
-	public RoomDTO findById(Long id) {
+	public RoomResponseDTO findById(Long id) {
 		Room room = roomRepository.findById(id).orElseThrow(() -> new EntityRoomNotFoundException(id));
 		return RoomMapper.toDto(room);
 	}
 	
-	public RoomDTO create(RoomDTO room) {
+	public RoomResponseDTO create(RoomRequestDTO room) {
 		if (roomRepository.existsByDescription(room.description())) {
 			throw new EntityRoomAlreadyExistsException(room.description());
 		}
 		
-		Room roomToCreate = RoomMapper.toEntity(room);
-		return RoomMapper.toDto(roomRepository.save(roomToCreate));
+		Room roomToSave = RoomMapper.toEntity(room);
+		return RoomMapper.toDto(roomRepository.save(roomToSave));
 	}
 	
-	public RoomDTO update(Long id, RoomDTO room) {
+	public RoomResponseDTO update(Long id, RoomRequestDTO room) {
 		Room roomToUpdate = roomRepository.findById(id).orElseThrow(
 				() -> new EntityRoomNotFoundException(id));
 		

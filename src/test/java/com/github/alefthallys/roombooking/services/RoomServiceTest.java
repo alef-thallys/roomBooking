@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
@@ -28,7 +29,7 @@ class RoomServiceTest {
 	private RoomRepository roomRepository;
 	
 	private Room room;
-	private RoomDTO roomDTO;
+	private RoomRequestDTO roomRequestDTO;
 	
 	@BeforeEach
 	void setUp() {
@@ -40,8 +41,7 @@ class RoomServiceTest {
 		room.setAvailable(true);
 		room.setLocation("1st Floor");
 		
-		roomDTO = new RoomDTO(
-				1L,
+		roomRequestDTO = new RoomRequestDTO(
 				"Room 101",
 				"A small room for meetings",
 				10,
@@ -53,7 +53,7 @@ class RoomServiceTest {
 	@Test
 	void findAll() {
 		when(roomRepository.findAll()).thenReturn(List.of(room));
-		List<RoomDTO> result = roomService.findAll();
+		List<RoomResponseDTO> result = roomService.findAll();
 		
 		assertEquals(1, result.size());
 		assertEquals(room.getId(), result.get(0).id());
@@ -69,7 +69,7 @@ class RoomServiceTest {
 	@Test
 	void findById() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-		RoomDTO result = roomService.findById(1L);
+		RoomResponseDTO result = roomService.findById(1L);
 		
 		assertEquals(room.getId(), result.id());
 		assertEquals(room.getName(), result.name());
@@ -91,8 +91,8 @@ class RoomServiceTest {
 	
 	@Test
 	void create() {
-		when(roomRepository.save(room)).thenReturn(room);
-		RoomDTO result = roomService.create(roomDTO);
+		when(roomRepository.save(any(Room.class))).thenReturn(room);
+		RoomResponseDTO result = roomService.create(roomRequestDTO);
 		
 		assertEquals(room.getId(), result.id());
 		assertEquals(room.getName(), result.name());
@@ -106,8 +106,7 @@ class RoomServiceTest {
 	
 	@Test
 	void update() {
-		RoomDTO updated = new RoomDTO(
-				1L,
+		RoomRequestDTO updated = new RoomRequestDTO(
 				"Room 205",
 				"A huge room for meetings",
 				40,
@@ -117,7 +116,7 @@ class RoomServiceTest {
 		
 		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
 		when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		RoomDTO result = roomService.update(1L, updated);
+		RoomResponseDTO result = roomService.update(1L, updated);
 		
 		assertEquals("Room 205", result.name());
 		assertEquals("A huge room for meetings", result.description());
@@ -131,7 +130,7 @@ class RoomServiceTest {
 	void update_shouldThrowException_whenRoomNotFound() {
 		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
 		
-		assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(1L, roomDTO));
+		assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(1L, roomRequestDTO));
 		
 		verify(roomRepository).findById(1L);
 	}

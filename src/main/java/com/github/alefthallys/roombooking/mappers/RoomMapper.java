@@ -1,12 +1,13 @@
 package com.github.alefthallys.roombooking.mappers;
 
-import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.models.Room;
 
 public class RoomMapper {
 	
-	public static RoomDTO toDto(Room room) {
-		return new RoomDTO(
+	public static RoomResponseDTO toDto(Room room) {
+		return new RoomResponseDTO(
 				room.getId(),
 				room.getName(),
 				room.getDescription(),
@@ -16,9 +17,8 @@ public class RoomMapper {
 		);
 	}
 	
-	public static Room toEntity(RoomDTO roomDTO) {
+	public static Room toEntity(RoomRequestDTO roomDTO) {
 		return new Room(
-				roomDTO.id(),
 				roomDTO.name(),
 				roomDTO.description(),
 				roomDTO.capacity(),

@@ -24,11 +24,12 @@ class UserServiceTest {
 	
 	@InjectMocks
 	private UserService userService;
+	
 	@Mock
 	private UserRepository userRepository;
+	
 	private User user;
 	private UserRequestDTO userRequestDTO;
-	private UserResponseDTO userResponseDTO;
 	
 	@BeforeEach
 	void setUp() {
@@ -45,14 +46,6 @@ class UserServiceTest {
 				"john@gmail.com",
 				"123456789",
 				"password"
-		);
-		
-		userResponseDTO = new UserResponseDTO(
-				1L,
-				"John Doe",
-				"john@gmail.com",
-				"123456789",
-				User.Role.USER
 		);
 	}
 	

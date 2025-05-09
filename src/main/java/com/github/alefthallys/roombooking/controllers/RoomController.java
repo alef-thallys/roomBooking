@@ -1,7 +1,9 @@
 package com.github.alefthallys.roombooking.controllers;
 
-import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.services.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +21,22 @@ public class RoomController {
 	}
 	
 	@GetMapping
-	public ResponseEntity<List<RoomDTO>> findAll() {
+	public ResponseEntity<List<RoomResponseDTO>> findAll() {
 		return ResponseEntity.ok(roomService.findAll());
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<RoomDTO> findById(@PathVariable Long id) {
+	public ResponseEntity<RoomResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(roomService.findById(id));
 	}
 	
 	@PostMapping
-	public ResponseEntity<RoomDTO> create(@RequestBody RoomDTO room) {
+	public ResponseEntity<RoomResponseDTO> create(@RequestBody @Valid RoomRequestDTO room) {
 		return new ResponseEntity<>(roomService.create(room), HttpStatus.CREATED);
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<RoomDTO> update(@PathVariable Long id, @RequestBody RoomDTO room) {
+	public ResponseEntity<RoomResponseDTO> update(@PathVariable Long id, @RequestBody @Valid RoomRequestDTO room) {
 		return ResponseEntity.ok(roomService.update(id, room));
 	}
 	

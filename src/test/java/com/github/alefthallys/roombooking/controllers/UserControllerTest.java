@@ -92,8 +92,6 @@ class UserControllerTest {
 	void shouldCreateUser() throws Exception {
 		when(userService.create(userRequestDTO)).thenReturn(userResponseDTO);
 		
-		System.out.println(objectMapper.writeValueAsString(userRequestDTO));
-		
 		mockMvc.perform(post(urlPrefix)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(userRequestDTO)))

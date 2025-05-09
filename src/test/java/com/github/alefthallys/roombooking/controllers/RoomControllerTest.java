@@ -1,7 +1,8 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.alefthallys.roombooking.dtos.RoomDTO;
+import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.services.RoomService;
@@ -30,11 +31,20 @@ class RoomControllerTest {
 	private ObjectMapper objectMapper;
 	@MockitoBean
 	private RoomService roomService;
-	private RoomDTO roomDTO;
+	private RoomRequestDTO roomRequestDTO;
+	private RoomResponseDTO roomResponseDTO;
 	
 	@BeforeEach
 	void setUp() {
-		roomDTO = new RoomDTO(
+		roomRequestDTO = new RoomRequestDTO(
+				"Room 101",
+				"Conference Room",
+				10,
+				true,
+				"1st Floor"
+		);
+		
+		roomResponseDTO = new RoomResponseDTO(
 				1L,
 				"Room 101",
 				"Conference Room",
@@ -46,30 +56,30 @@ class RoomControllerTest {
 	
 	@Test
 	void shouldReturnAllRooms() throws Exception {
-		when(roomService.findAll()).thenReturn(List.of(roomDTO));
+		when(roomService.findAll()).thenReturn(List.of(roomResponseDTO));
 		
 		mockMvc.perform(get(urlPrefix))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].id").value(roomDTO.id()))
-				.andExpect(jsonPath("$[0].name").value(roomDTO.name()))
-				.andExpect(jsonPath("$[0].description").value(roomDTO.description()))
-				.andExpect(jsonPath("$[0].capacity").value(roomDTO.capacity()))
-				.andExpect(jsonPath("$[0].available").value(roomDTO.available()))
-				.andExpect(jsonPath("$[0].location").value(roomDTO.location()));
+				.andExpect(jsonPath("$[0].id").value(roomResponseDTO.id()))
+				.andExpect(jsonPath("$[0].name").value(roomResponseDTO.name()))
+				.andExpect(jsonPath("$[0].description").value(roomResponseDTO.description()))
+				.andExpect(jsonPath("$[0].capacity").value(roomResponseDTO.capacity()))
+				.andExpect(jsonPath("$[0].available").value(roomResponseDTO.available()))
+				.andExpect(jsonPath("$[0].location").value(roomResponseDTO.location()));
 	}
 	
 	@Test
 	void shouldReturnRoomById() throws Exception {
-		when(roomService.findById(1L)).thenReturn(roomDTO);
+		when(roomService.findById(1L)).thenReturn(roomResponseDTO);
 		
 		mockMvc.perform(get(urlPrefix + "/{id}", 1L))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(roomDTO.id()))
-				.andExpect(jsonPath("$.name").value(roomDTO.name()))
-				.andExpect(jsonPath("$.description").value(roomDTO.description()))
-				.andExpect(jsonPath("$.capacity").value(roomDTO.capacity()))
-				.andExpect(jsonPath("$.available").value(roomDTO.available()))
-				.andExpect(jsonPath("$.location").value(roomDTO.location()));
+				.andExpect(jsonPath("$.id").value(roomResponseDTO.id()))
+				.andExpect(jsonPath("$.name").value(roomResponseDTO.name()))
+				.andExpect(jsonPath("$.description").value(roomResponseDTO.description()))
+				.andExpect(jsonPath("$.capacity").value(roomResponseDTO.capacity()))
+				.andExpect(jsonPath("$.available").value(roomResponseDTO.available()))
+				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
 	}
 	
 	@Test
@@ -82,54 +92,54 @@ class RoomControllerTest {
 	
 	@Test
 	void shouldCreateRoom() throws Exception {
-		when(roomService.create(roomDTO)).thenReturn(roomDTO);
+		when(roomService.create(roomRequestDTO)).thenReturn(roomResponseDTO);
 		
 		mockMvc.perform(post(urlPrefix)
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(roomDTO)))
+						.content(objectMapper.writeValueAsString(roomRequestDTO)))
 				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.id").value(roomDTO.id()))
-				.andExpect(jsonPath("$.name").value(roomDTO.name()))
-				.andExpect(jsonPath("$.description").value(roomDTO.description()))
-				.andExpect(jsonPath("$.capacity").value(roomDTO.capacity()))
-				.andExpect(jsonPath("$.available").value(roomDTO.available()))
-				.andExpect(jsonPath("$.location").value(roomDTO.location()));
+				.andExpect(jsonPath("$.id").value(roomResponseDTO.id()))
+				.andExpect(jsonPath("$.name").value(roomResponseDTO.name()))
+				.andExpect(jsonPath("$.description").value(roomResponseDTO.description()))
+				.andExpect(jsonPath("$.capacity").value(roomResponseDTO.capacity()))
+				.andExpect(jsonPath("$.available").value(roomResponseDTO.available()))
+				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
 	}
 	
 	@Test
 	void shouldThrowEntityRoomAlreadyExistsExceptionOnCreate() throws Exception {
-		when(roomService.create(roomDTO)).thenThrow(new EntityRoomAlreadyExistsException(roomDTO.description()));
+		when(roomService.create(roomRequestDTO)).thenThrow(new EntityRoomAlreadyExistsException(roomRequestDTO.description()));
 		
 		mockMvc.perform(post(urlPrefix)
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(roomDTO)))
+						.content(objectMapper.writeValueAsString(roomRequestDTO)))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.message").value("Room already exists with description: " + roomDTO.description()));
+				.andExpect(jsonPath("$.message").value("Room already exists with description: " + roomRequestDTO.description()));
 	}
 	
 	@Test
 	void shouldUpdateRoom() throws Exception {
-		when(roomService.update(1L, roomDTO)).thenReturn(roomDTO);
+		when(roomService.update(1L, roomRequestDTO)).thenReturn(roomResponseDTO);
 		
 		mockMvc.perform(put(urlPrefix + "/{id}", 1L)
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(roomDTO)))
+						.content(objectMapper.writeValueAsString(roomRequestDTO)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(roomDTO.id()))
-				.andExpect(jsonPath("$.name").value(roomDTO.name()))
-				.andExpect(jsonPath("$.description").value(roomDTO.description()))
-				.andExpect(jsonPath("$.capacity").value(roomDTO.capacity()))
-				.andExpect(jsonPath("$.available").value(roomDTO.available()))
-				.andExpect(jsonPath("$.location").value(roomDTO.location()));
+				.andExpect(jsonPath("$.id").value(roomResponseDTO.id()))
+				.andExpect(jsonPath("$.name").value(roomResponseDTO.name()))
+				.andExpect(jsonPath("$.description").value(roomResponseDTO.description()))
+				.andExpect(jsonPath("$.capacity").value(roomResponseDTO.capacity()))
+				.andExpect(jsonPath("$.available").value(roomResponseDTO.available()))
+				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
 	}
 	
 	@Test
 	void shouldThrowEntityRoomNotFoundExceptionOnUpdate() throws Exception {
-		when(roomService.update(1L, roomDTO)).thenThrow(new EntityRoomNotFoundException(1L));
+		when(roomService.update(1L, roomRequestDTO)).thenThrow(new EntityRoomNotFoundException(1L));
 		
 		mockMvc.perform(put(urlPrefix + "/{id}", 1L)
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(roomDTO)))
+						.content(objectMapper.writeValueAsString(roomRequestDTO)))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.message").value("Room not found with id: " + 1L));
 	}

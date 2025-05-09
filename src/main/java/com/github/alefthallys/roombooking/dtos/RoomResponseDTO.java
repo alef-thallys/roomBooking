@@ -1,6 +1,6 @@
 package com.github.alefthallys.roombooking.dtos;
 
-public record RoomDTO(
+public record RoomResponseDTO(
 		Long id,
 		String name,
 		String description,
