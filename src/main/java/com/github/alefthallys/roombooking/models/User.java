@@ -50,7 +50,7 @@ public class User implements Serializable {
 		this.email = email;
 		this.password = password;
 		this.phone = phone;
-		this.role = Role.USER;
+		this.role = Role.ROLE_USER;
 	}
 	
 	@Override
@@ -66,7 +66,7 @@ public class User implements Serializable {
 	}
 	
 	public enum Role {
-		ADMIN,
-		USER
+		ROLE_ADMIN,
+		ROLE_USER
 	}
 }

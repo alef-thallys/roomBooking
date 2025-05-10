@@ -64,7 +64,7 @@ class UserControllerTest {
 				"John Doe",
 				"john@gmail.com",
 				"12997665045",
-				User.Role.USER
+				User.Role.ROLE_USER
 		);
 	}
 	

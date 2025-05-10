@@ -7,6 +7,7 @@ import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException
 import com.github.alefthallys.roombooking.mappers.UserMapper;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +16,11 @@ import java.util.List;
 public class UserService {
 	
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 	
-	public UserService(UserRepository userRepository) {
+	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 	
 	public List<UserResponseDTO> findAll() {
@@ -37,6 +40,8 @@ public class UserService {
 		}
 		
 		User userToSave = UserMapper.toEntity(userDTO);
+		userToSave.setPassword(passwordEncoder.encode(userToSave.getPassword()));
+		
 		return UserMapper.toDto(userRepository.save(userToSave));
 	}
 	

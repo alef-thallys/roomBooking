@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +29,9 @@ class UserServiceTest {
 	@Mock
 	private UserRepository userRepository;
 	
+	@Mock
+	private PasswordEncoder passwordEncoder;
+	
 	private User user;
 	private UserRequestDTO userRequestDTO;
 	
@@ -39,7 +43,7 @@ class UserServiceTest {
 		user.setEmail("john@gmail.com");
 		user.setPassword("password");
 		user.setPhone("123456789");
-		user.setRole(User.Role.USER);
+		user.setRole(User.Role.ROLE_USER);
 		
 		userRequestDTO = new UserRequestDTO(
 				"John Doe",
@@ -116,7 +120,7 @@ class UserServiceTest {
 		assertEquals("Mary Doe", result.name());
 		assertEquals("mary@gmail.com", result.email());
 		assertEquals("123456789", result.phone());
-		assertEquals(User.Role.USER, result.role());
+		assertEquals(User.Role.ROLE_USER, result.role());
 		
 		verify(userRepository).findById(1L);
 		verify(userRepository).save(any(User.class));
