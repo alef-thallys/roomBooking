@@ -17,12 +17,4 @@ public class JwtProperties {
 	private String audience;
 	private String header;
 	private String prefix;
-	private Token token = new Token();
-	
-	@Setter
-	public static class Token {
-		private long refreshExpiration;
-		private String header;
-		private String prefix;
-	}
 }

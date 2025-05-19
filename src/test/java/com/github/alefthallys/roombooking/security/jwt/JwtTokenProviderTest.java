@@ -1,5 +1,6 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
+import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,15 +48,14 @@ class JwtTokenProviderTest {
 		String token = jwtTokenProvider.generateToken(auth);
 		assertNotNull(token);
 		
-		assertTrue(jwtTokenProvider.validateToken(token));
+		assertDoesNotThrow(() -> jwtTokenProvider.validateToken(token));
 		assertEquals("userTest@gmail.com", jwtTokenProvider.getUsernameFromToken(token));
 	}
 	
 	@Test
 	void testInvalidToken() {
 		String invalidToken = "invalidTokenString";
-		
-		assertFalse(jwtTokenProvider.validateToken(invalidToken));
+		assertThrows(InvalidJwtException.class, () -> jwtTokenProvider.validateToken(invalidToken));
 	}
 	
 	@Test
@@ -72,6 +72,6 @@ class JwtTokenProviderTest {
 		
 		Thread.sleep(200);
 		
-		assertFalse(shortExpiryProvider.validateToken(token));
+		assertThrows(InvalidJwtException.class, () -> jwtTokenProvider.validateToken(token));
 	}
 }

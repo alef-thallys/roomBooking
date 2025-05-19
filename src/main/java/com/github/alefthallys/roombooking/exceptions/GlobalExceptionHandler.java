@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
 		return buildApiError(HttpStatus.CONFLICT, ex.getMessage());
 	}
 	
+	
+	@ExceptionHandler(InvalidJwtException.class)
+	public ResponseEntity<ApiError> handleInvalidJwtException(InvalidJwtException ex) {
+		return buildApiError(HttpStatus.UNAUTHORIZED, ex.getMessage());
+	}
+	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(
 			MethodArgumentNotValidException ex,
