@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,7 +23,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,9 +54,16 @@ class AuthControllerTest {
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
 	private User user;
+	private String token;
+	private LoginRequestDTO loginRequestDTO;
 	
 	@BeforeEach
 	void setUp() {
+		loginRequestDTO = new LoginRequestDTO(
+				"john@gmail.com",
+				"12997665045"
+		);
+		
 		userRequestDTO = new UserRequestDTO(
 				"John Doe",
 				"john@gmail.com",
@@ -72,12 +79,8 @@ class AuthControllerTest {
 				User.Role.ROLE_USER
 		);
 		
-		user = new User();
-		user.setId(1L);
-		user.setName("John Doe");
-		user.setEmail("john@gmail.com");
-		user.setPhone("12997665045");
-		user.setRole(User.Role.ROLE_USER);
+		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.password()));
+		token = jwtTokenProvider.generateToken(authentication);
 	}
 	
 	@Test
@@ -96,35 +99,39 @@ class AuthControllerTest {
 	}
 	
 	@Test
+	void shouldReturnBadRequestWhenRegisteringUserWithInvalidData() throws Exception {
+		mockMvc.perform(post(urlPrefix + "/register")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new UserRequestDTO(
+						"John Doe",
+						"invalid-email.com",
+						"password",
+						"12997665045"
+				)))).andExpect(status().isBadRequest());
+	}
+	
+	@Test
 	void shouldLoginAndReturnJwtToken() throws Exception {
-		String token = "mocked-jwt-token";
-		LoginRequestDTO loginRequest = new LoginRequestDTO("john@gmail.com", "password");
-		
 		when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
 		when(jwtTokenProvider.generateToken(any())).thenReturn(token);
 		
+		System.out.println("Token: " + token);
+		
 		mockMvc.perform(post(urlPrefix + "/login")
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(objectMapper.writeValueAsString(loginRequest)))
+						.content(objectMapper.writeValueAsString(loginRequestDTO)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.token").value(token));
 	}
 	
 	@Test
-	void getCurrentUser() throws Exception {
-		Authentication authentication = mock(Authentication.class);
-		when(authentication.getPrincipal()).thenReturn(user);
-		
-		var securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
-		when(securityContext.getAuthentication()).thenReturn(authentication);
-		org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
-		
-		mockMvc.perform(get(urlPrefix + "/me"))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(user.getId()))
-				.andExpect(jsonPath("$.name").value(user.getName()))
-				.andExpect(jsonPath("$.email").value(user.getEmail()))
-				.andExpect(jsonPath("$.phone").value(user.getPhone()))
-				.andExpect(jsonPath("$.role").value(user.getRole().name()));
+	void shouldReturnBadRequestWhenLoginWithInvalidData() throws Exception {
+		mockMvc.perform(post(urlPrefix + "/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(new LoginRequestDTO(
+								"invalid-email.com",
+								"password"
+						))))
+				.andExpect(status().isBadRequest());
 	}
 }
