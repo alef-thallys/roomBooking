@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -66,24 +67,22 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponseDTO> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", request.getRequestURI());
 	}
-
-//
-//	@ExceptionHandler(EntityRoomNotFoundException.class)
-//	public ResponseEntity<ApiError> handleRoomNotFound(EntityRoomNotFoundException ex) {
-//		return buildApiError(HttpStatus.NOT_FOUND, ex.getMessage());
-//	}
-//
-//	@ExceptionHandler(EntityRoomAlreadyExistsException.class)
-//	public ResponseEntity<ApiError> handleRoomAlreadyExists(EntityRoomAlreadyExistsException ex) {
-//		return buildApiError(HttpStatus.CONFLICT, ex.getMessage());
-//	}
-//
-//	@ExceptionHandler(BadCredentialsException.class)
-//	public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
-//		return buildApiError(HttpStatus.CONFLICT, ex.getMessage());
-//	}
-//
-//
+	
+	@ExceptionHandler(EntityRoomNotFoundException.class)
+	public ResponseEntity<ErrorResponseDTO> handleRoomNotFound(EntityRoomNotFoundException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+	}
+	
+	@ExceptionHandler(EntityRoomAlreadyExistsException.class)
+	public ResponseEntity<ErrorResponseDTO> handleRoomAlreadyExists(EntityRoomAlreadyExistsException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+	}
+	
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponseDTO> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
+	}
+	
 //	@ExceptionHandler(InvalidJwtException.class)
 //	public ResponseEntity<ApiError> handleInvalidJwtException(InvalidJwtException ex) {
 //		return buildApiError(HttpStatus.UNAUTHORIZED, ex.getMessage());

@@ -44,10 +44,9 @@ public class AuthController {
 		return ResponseEntity.ok(new JwtResponseDTO(token));
 	}
 	
-	// TODO: This endpoint should be deleted in production
 	@GetMapping("/me")
 	public ResponseEntity<UserDetails> getCurrentUser() {
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		return ResponseEntity.ok(userDetails);
+		UserDetails authentication = jwtTokenProvider.getAuthentication();
+		return ResponseEntity.ok(authentication);
 	}
 }

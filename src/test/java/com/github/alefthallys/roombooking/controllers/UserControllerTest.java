@@ -70,6 +70,14 @@ class UserControllerTest {
 		);
 	}
 	
+	private void assertUserResponseDTO(ResultActions resultActions, UserResponseDTO userResponseDTO) throws Exception {
+		resultActions.andExpect(jsonPath("$.id").value(userResponseDTO.id()))
+				.andExpect(jsonPath("$.name").value(userResponseDTO.name()))
+				.andExpect(jsonPath("$.email").value(userResponseDTO.email()))
+				.andExpect(jsonPath("$.phone").value(userResponseDTO.phone()))
+				.andExpect(jsonPath("$.role").value(userResponseDTO.role().name()));
+	}
+	
 	@Nested
 	@DisplayName("GET /api/v1/users")
 	class FindAllUsers {
@@ -258,13 +266,5 @@ class UserControllerTest {
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
-	}
-	
-	private void assertUserResponseDTO(ResultActions resultActions, UserResponseDTO userResponseDTO) throws Exception {
-		resultActions.andExpect(jsonPath("$.id").value(userResponseDTO.id()))
-				.andExpect(jsonPath("$.name").value(userResponseDTO.name()))
-				.andExpect(jsonPath("$.email").value(userResponseDTO.email()))
-				.andExpect(jsonPath("$.phone").value(userResponseDTO.phone()))
-				.andExpect(jsonPath("$.role").value(userResponseDTO.role().name()));
 	}
 }
