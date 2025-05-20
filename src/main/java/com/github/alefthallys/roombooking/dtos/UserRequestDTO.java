@@ -11,7 +11,7 @@ public record UserRequestDTO(
 		@NotBlank(message = "Name is required")
 		String name,
 		
-		@Email(message = "Email must be valid")
+		@Email(message = "Invalid email format")
 		@Size(max = 50, message = "Email must be less than 50 characters")
 		@NotBlank(message = "Email is required")
 		String email,

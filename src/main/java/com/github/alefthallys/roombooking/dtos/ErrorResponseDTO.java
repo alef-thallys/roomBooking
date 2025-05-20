@@ -1,21 +1,27 @@
 package com.github.alefthallys.roombooking.dtos;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
-public record ErrorResponseDTO(
-		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
-		Instant timestamp,
-		int status,
-		String error,
-		String path,
-		Map<String, List<String>> fieldErrors
-) {
-	public ErrorResponseDTO(int status, String error, String path, Map<String, List<String>> fieldErrors) {
-		this(Instant.now(), status, error, path, fieldErrors);
+@Getter
+@Setter
+public class ErrorResponseDTO {
+	private int status;
+	private String error;
+	private String message;
+	private String path;
+	private String timestamp;
+	private List<FieldErrorDTO> fieldErrors;
+	
+	public ErrorResponseDTO(int status, String error, String message, String path, List<FieldErrorDTO> fieldErrors) {
+		this.status = status;
+		this.error = error;
+		this.message = message;
+		this.path = path;
+		this.timestamp = Instant.now().toString();
+		this.fieldErrors = fieldErrors;
 	}
 }
-
