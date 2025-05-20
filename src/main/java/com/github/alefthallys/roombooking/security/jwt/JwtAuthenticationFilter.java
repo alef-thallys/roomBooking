@@ -35,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				  "timestamp": "%s",
 				  "status": 401,
 				  "message": "%s",
+				              "path": "%s"
 				}
 				""".formatted(java.time.Instant.now(), ex.getMessage(), request.getRequestURI()));
 	}

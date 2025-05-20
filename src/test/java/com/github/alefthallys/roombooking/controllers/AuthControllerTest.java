@@ -15,7 +15,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -51,11 +50,10 @@ class AuthControllerTest {
 	@MockitoBean
 	private UserService userService;
 	
+	private LoginRequestDTO loginRequestDTO;
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
-	private User user;
 	private String token;
-	private LoginRequestDTO loginRequestDTO;
 	
 	@BeforeEach
 	void setUp() {
@@ -79,8 +77,7 @@ class AuthControllerTest {
 				User.Role.ROLE_USER
 		);
 		
-		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.password()));
-		token = jwtTokenProvider.generateToken(authentication);
+		token = "my-jwt-token";
 	}
 	
 	@Test
@@ -114,8 +111,6 @@ class AuthControllerTest {
 	void shouldLoginAndReturnJwtToken() throws Exception {
 		when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
 		when(jwtTokenProvider.generateToken(any())).thenReturn(token);
-		
-		System.out.println("Token: " + token);
 		
 		mockMvc.perform(post(urlPrefix + "/login")
 						.contentType(MediaType.APPLICATION_JSON)
