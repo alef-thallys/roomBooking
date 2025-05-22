@@ -29,7 +29,7 @@ logging:
 
 jwt:
   secret: u4pHe1gHY!dnM8nAq3VJ@vLyxRs#TpBZrW7cZf96m2@qX9WmFS
-  expiration: 86400000
+  expiration: 86400000 # 24h
   issuer: roomBooking
   audience: roomBooking
   header: Authorization

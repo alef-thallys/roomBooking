@@ -1,5 +1,7 @@
 package com.github.alefthallys.roombooking.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.Instant;
 import java.util.List;
 
@@ -9,6 +11,8 @@ public record ErrorResponseDTO(
 		String message,
 		String path,
 		String timestamp,
+		
+		@JsonInclude(JsonInclude.Include.NON_NULL)
 		List<FieldErrorDTO> fieldErrors
 ) {
 	public ErrorResponseDTO(int status, String error, String message, String path, List<FieldErrorDTO> fieldErrors) {
