@@ -82,6 +82,11 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponseDTO> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
 	}
+	
+	@ExceptionHandler(ForbiddenException.class)
+	public ResponseEntity<ErrorResponseDTO> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
+	}
 
 //	@ExceptionHandler(InvalidJwtException.class)
 //	public ResponseEntity<ApiError> handleInvalidJwtException(InvalidJwtException ex) {

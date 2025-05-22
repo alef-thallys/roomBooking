@@ -3,6 +3,7 @@ package com.github.alefthallys.roombooking.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
@@ -51,12 +52,19 @@ class UserControllerTest {
 	
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
+	private UserUpdateRequestDTO userUpdateRequestDTO;
 	
 	@BeforeEach
 	void setUp() {
 		userRequestDTO = new UserRequestDTO(
 				"John Doe",
 				"john@gmail.com",
+				"password",
+				"12997665045"
+		);
+		
+		userUpdateRequestDTO = new UserUpdateRequestDTO(
+				"John Doe",
 				"password",
 				"12997665045"
 		);
@@ -186,7 +194,7 @@ class UserControllerTest {
 		@Test
 		@DisplayName("should update user")
 		void shouldUpdateUser() throws Exception {
-			when(userService.update(1L, userRequestDTO)).thenReturn(userResponseDTO);
+			when(userService.update(1L, userUpdateRequestDTO)).thenReturn(userResponseDTO);
 			
 			assertUserResponseDTO(
 					mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
@@ -200,29 +208,13 @@ class UserControllerTest {
 		@Test
 		@DisplayName("should return 404 when updating non-existent user")
 		void shouldThrowEntityUserNotFoundExceptionOnUpdate() throws Exception {
-			when(userService.update(1L, userRequestDTO)).thenThrow(new EntityUserNotFoundException(1L));
+			when(userService.update(1L, userUpdateRequestDTO)).thenThrow(new EntityUserNotFoundException(1L));
 			
 			mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(userRequestDTO)))
 					.andExpect(status().isNotFound())
 					.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
-		}
-		
-		@Test
-		@DisplayName("should return 400 when request body is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnUpdate() throws Exception {
-			userRequestDTO = new UserRequestDTO(
-					"John Doe",
-					"invalid-email",
-					"password",
-					"12997665045"
-			);
-			mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(userRequestDTO)))
-					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 		
 		@Test

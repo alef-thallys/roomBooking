@@ -2,6 +2,7 @@ package com.github.alefthallys.roombooking.controllers;
 
 import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,7 @@ public class UserController {
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UserRequestDTO userDTO) {
+	public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UserUpdateRequestDTO userDTO) {
 		return ResponseEntity.ok(userService.update(id, userDTO));
 	}
 	

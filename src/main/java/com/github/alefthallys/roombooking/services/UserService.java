@@ -2,6 +2,7 @@ package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.mappers.UserMapper;
@@ -17,10 +18,13 @@ public class UserService {
 	
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final AuthService authService;
 	
-	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+	
+	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthService authService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
+		this.authService = authService;
 	}
 	
 	public List<UserResponseDTO> findAll() {
@@ -30,8 +34,8 @@ public class UserService {
 	}
 	
 	public UserResponseDTO findById(Long id) {
-		User user = userRepository.findById(id).orElseThrow(() -> new EntityUserNotFoundException(id));
-		return UserMapper.toDto(user);
+		User userById = userRepository.findById(id).orElseThrow(() -> new EntityUserNotFoundException(id));
+		return UserMapper.toDto(userById);
 	}
 	
 	public UserResponseDTO create(UserRequestDTO userDTO) {
@@ -45,22 +49,33 @@ public class UserService {
 		return UserMapper.toDto(userRepository.save(userToSave));
 	}
 	
-	public UserResponseDTO update(Long id, UserRequestDTO userDTO) {
-		User userToUpdate = userRepository.findById(id).orElseThrow(
+	public UserResponseDTO update(Long id, UserUpdateRequestDTO userDTO) {
+		User userById = userRepository.findById(id).orElseThrow(
 				() -> new EntityUserNotFoundException(id));
 		
-		userToUpdate.setName(userDTO.name());
-		userToUpdate.setEmail(userDTO.email());
-		userToUpdate.setPassword(userDTO.password());
-		userToUpdate.setPhone(userDTO.phone());
+		authService.validateUserOwnership(userById);
 		
-		User savedUser = userRepository.save(userToUpdate);
+		if (!userDTO.name().isBlank()) {
+			userById.setName(userDTO.name());
+		}
+		
+		if (!userDTO.password().isBlank()) {
+			userById.setPassword(passwordEncoder.encode(userDTO.password()));
+		}
+		
+		if (!userDTO.phone().isBlank()) {
+			userById.setPhone(userDTO.phone());
+		}
+		
+		User savedUser = userRepository.save(userById);
 		return UserMapper.toDto(savedUser);
 	}
 	
 	public void delete(Long id) {
 		User userById = userRepository.findById(id).orElseThrow(
 				() -> new EntityUserNotFoundException(id));
+		
+		authService.validateUserOwnership(userById);
 		userRepository.delete(userById);
 	}
 }

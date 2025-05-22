@@ -2,10 +2,12 @@ package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
+import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,8 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -31,13 +32,20 @@ class UserServiceTest {
 	private UserService userService;
 	
 	@Mock
+	private AuthService authService;
+	
+	@Mock
 	private UserRepository userRepository;
 	
 	@Mock
 	private PasswordEncoder passwordEncoder;
 	
+	@Mock
+	private JwtTokenProvider jwtTokenProvider;
+	
 	private User user;
 	private UserRequestDTO userRequestDTO;
+	private UserUpdateRequestDTO userUpdateRequestDTO;
 	
 	@BeforeEach
 	void setUp() {
@@ -52,6 +60,12 @@ class UserServiceTest {
 		userRequestDTO = new UserRequestDTO(
 				"John Doe",
 				"john@gmail.com",
+				"123456789",
+				"password"
+		);
+		
+		userUpdateRequestDTO = new UserUpdateRequestDTO(
+				"John Doe",
 				"123456789",
 				"password"
 		);
@@ -142,22 +156,28 @@ class UserServiceTest {
 		@DisplayName("Should update a user")
 		void shouldUpdateAUser() {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-			when(userRepository.save(any(User.class))).thenReturn(user);
-			UserResponseDTO userResponseDTO = userService.update(1L, userRequestDTO);
-			assertEqualsResponseDTO(user, userResponseDTO);
+			doNothing().when(authService).validateUserOwnership(user);
+			when(passwordEncoder.encode(userUpdateRequestDTO.password())).thenReturn("encodedPassword");
+			when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+			
+			UserResponseDTO userResponseDTO = userService.update(1L, userUpdateRequestDTO);
+			assertEquals(user.getId(), userResponseDTO.id());
+			assertEquals(userUpdateRequestDTO.name(), userResponseDTO.name());
+			assertEquals(user.getEmail(), userResponseDTO.email());
+			assertEquals(userUpdateRequestDTO.phone(), userResponseDTO.phone());
 		}
 		
 		@Test
 		@DisplayName("Should throw EntityUserNotFoundException when user is not found")
 		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
 			when(userRepository.findById(1L)).thenReturn(Optional.empty());
-			assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userRequestDTO));
+			assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userUpdateRequestDTO));
 		}
 		
 		@Test
 		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
 		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
-			assertThrows(EntityUserNotFoundException.class, () -> userService.update(null, userRequestDTO));
+			assertThrows(EntityUserNotFoundException.class, () -> userService.update(null, userUpdateRequestDTO));
 		}
 	}
 	
@@ -169,6 +189,8 @@ class UserServiceTest {
 		@DisplayName("Should delete a user")
 		void shouldDeleteAUser() {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			doNothing().when(authService).validateUserOwnership(user);
+			
 			userService.delete(1L);
 		}
 		
