@@ -2,6 +2,7 @@ package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
 import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
@@ -13,15 +14,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RoomServiceTest {
@@ -45,130 +44,136 @@ class RoomServiceTest {
 		room.setAvailable(true);
 		room.setLocation("1st Floor");
 		
-		roomRequestDTO = new RoomRequestDTO(
-				"Room 101",
-				"A small room for meetings",
-				10,
-				true,
-				"1st Floor"
-		);
+		roomRequestDTO = new RoomRequestDTO("Room 101", "A small room for meetings", 10, true, "1st Floor");
 	}
 	
-	private void assertRoomResponseDTO(ResultActions resultActions, RoomResponseDTO roomResponseDTO) throws Exception {
-		resultActions.andExpect(jsonPath("$.id").value(roomResponseDTO.id()))
-				.andExpect(jsonPath("$.name").value(roomResponseDTO.name()))
-				.andExpect(jsonPath("$.description").value(roomResponseDTO.description()))
-				.andExpect(jsonPath("$.capacity").value(roomResponseDTO.capacity()))
-				.andExpect(jsonPath("$.available").value(roomResponseDTO.available()))
-				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
+	private void assertEqualsResponseDTO(Room room, RoomResponseDTO roomResponseDTO) {
+		assertEquals(room.getId(), roomResponseDTO.id());
+		assertEquals(room.getName(), roomResponseDTO.name());
+		assertEquals(room.getDescription(), roomResponseDTO.description());
+		assertEquals(room.getCapacity(), roomResponseDTO.capacity());
+		assertEquals(room.isAvailable(), roomResponseDTO.available());
+		assertEquals(room.getLocation(), roomResponseDTO.location());
 	}
 	
-	// TODO
 	@Nested
-	@DisplayName("")
-	class FindAllRooms {}
+	@DisplayName("Find All Rooms")
+	class FindAllRooms {
+		
+		@Test
+		@DisplayName("should return a list of rooms")
+		void shouldReturnAllRooms() {
+			when(roomRepository.findAll()).thenReturn(List.of(room));
+			List<RoomResponseDTO> result = roomService.findAll();
+			assertEqualsResponseDTO(room, result.get(0));
+		}
+		
+		@Test
+		@DisplayName("should return an empty list when no rooms are found")
+		void shouldReturnEmptyList() {
+			when(roomRepository.findAll()).thenReturn(List.of());
+			List<RoomResponseDTO> result = roomService.findAll();
+			assertEquals(0, result.size());
+		}
+	}
 	
-//	@Test
-//	void findAll() {
-//		when(roomRepository.findAll()).thenReturn(List.of(room));
-//		List<RoomResponseDTO> result = roomService.findAll();
-//
-//		assertEquals(1, result.size());
-//		assertEquals(room.getId(), result.get(0).id());
-//		assertEquals(room.getName(), result.get(0).name());
-//		assertEquals(room.getDescription(), result.get(0).description());
-//		assertEquals(room.getCapacity(), result.get(0).capacity());
-//		assertEquals(room.isAvailable(), result.get(0).available());
-//		assertEquals(room.getLocation(), result.get(0).location());
-//
-//		verify(roomRepository).findAll();
-//	}
-//
-//	@Test
-//	void findById() {
-//		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-//		RoomResponseDTO result = roomService.findById(1L);
-//
-//		assertEquals(room.getId(), result.id());
-//		assertEquals(room.getName(), result.name());
-//		assertEquals(room.getDescription(), result.description());
-//		assertEquals(room.getCapacity(), result.capacity());
-//		assertEquals(room.isAvailable(), result.available());
-//		assertEquals(room.getLocation(), result.location());
-//
-//		verify(roomRepository).findById(1L);
-//	}
-//
-//	@Test
-//	void findById_shouldThrowException_whenRoomNotFound() {
-//		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
-//		assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(1L));
-//
-//		verify(roomRepository).findById(1L);
-//	}
-//
-//	@Test
-//	void create() {
-//		when(roomRepository.save(any(Room.class))).thenReturn(room);
-//		RoomResponseDTO result = roomService.create(roomRequestDTO);
-//
-//		assertEquals(room.getId(), result.id());
-//		assertEquals(room.getName(), result.name());
-//		assertEquals(room.getDescription(), result.description());
-//		assertEquals(room.getCapacity(), result.capacity());
-//		assertEquals(room.isAvailable(), result.available());
-//		assertEquals(room.getLocation(), result.location());
-//
-//		verify(roomRepository).save(any(Room.class));
-//	}
-//
-//	@Test
-//	void update() {
-//		RoomRequestDTO updated = new RoomRequestDTO(
-//				"Room 205",
-//				"A huge room for meetings",
-//				40,
-//				false,
-//				"12st Floor"
-//		);
-//
-//		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-//		when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
-//		RoomResponseDTO result = roomService.update(1L, updated);
-//
-//		assertEquals("Room 205", result.name());
-//		assertEquals("A huge room for meetings", result.description());
-//		assertEquals(40, result.capacity());
-//
-//		verify(roomRepository).save(any(Room.class));
-//		verify(roomRepository).findById(1L);
-//	}
-//
-//	@Test
-//	void update_shouldThrowException_whenRoomNotFound() {
-//		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
-//
-//		assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(1L, roomRequestDTO));
-//
-//		verify(roomRepository).findById(1L);
-//	}
-//
-//
-//	@Test
-//	void delete() {
-//		when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-//		doNothing().when(roomRepository).delete(room);
-//		roomService.delete(1L);
-//
-//		verify(roomRepository).findById(1L);
-//		verify(roomRepository).delete(room);
-//	}
-//
-//	@Test
-//	void delete_shouldThrowException_whenRoomNotFound() {
-//		when(roomRepository.findById(1L)).thenReturn(Optional.empty());
-//		assertThrows(EntityRoomNotFoundException.class, () -> roomService.delete(1L));
-//
-//		verify(roomRepository).findById(1L);
-//	}
+	@Nested
+	@DisplayName("Find Room By ID")
+	class FindRoomById {
+		
+		@Test
+		@DisplayName("should return room by id")
+		void shouldReturnRoomById() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.of(room));
+			RoomResponseDTO result = roomService.findById(1L);
+			assertEqualsResponseDTO(room, result);
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room not found")
+		void shouldThrowExceptionWhenRoomNotFound() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(1L));
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room id is null")
+		void shouldThrowExceptionWhenRoomIdIsNull() {
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(null));
+		}
+	}
+	
+	@Nested
+	@DisplayName("Create Room")
+	class CreateRoom {
+		
+		@Test
+		@DisplayName("should create a new room")
+		void shouldCreateRoom() {
+			when(roomRepository.save(any(Room.class))).thenReturn(room);
+			RoomResponseDTO result = roomService.create(roomRequestDTO);
+			assertEqualsResponseDTO(room, result);
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room already exists")
+		void shouldThrowExceptionWhenRoomAlreadyExists() {
+			when(roomRepository.existsByName(roomRequestDTO.name())).thenReturn(true);
+			assertThrows(EntityRoomAlreadyExistsException.class, () -> roomService.create(roomRequestDTO));
+		}
+	}
+	
+	@Nested
+	@DisplayName("Update Room")
+	class UpdateRoom    {
+		
+		@Test
+		@DisplayName("should update room")
+		void shouldUpdateRoom() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.of(room));
+			when(roomRepository.save(any(Room.class))).thenReturn(room);
+			RoomResponseDTO result = roomService.update(1L, roomRequestDTO);
+			assertEqualsResponseDTO(room, result);
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room not found")
+		void shouldThrowExceptionWhenRoomNotFound() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(1L, roomRequestDTO));
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room id is null")
+		void shouldThrowExceptionWhenRoomIdIsNull() {
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(null, roomRequestDTO));
+		}
+	}
+	
+	@Nested
+	@DisplayName("Delete Room")
+	class DeleteRoom {
+		
+		@Test
+		@DisplayName("should delete room")
+		void shouldDeleteRoom() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.of(room));
+			roomService.delete(1L);
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(1L));
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room not found")
+		void shouldThrowExceptionWhenRoomNotFound() {
+			when(roomRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.delete(1L));
+		}
+		
+		@Test
+		@DisplayName("should throw exception when room id is null")
+		void shouldThrowExceptionWhenRoomIdIsNull() {
+			assertThrows(EntityRoomNotFoundException.class, () -> roomService.delete(null));
+		}
+	}
 }

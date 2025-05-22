@@ -2,10 +2,13 @@ package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,7 +21,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -53,104 +57,132 @@ class UserServiceTest {
 		);
 	}
 	
-	@Test
-	void findAll() {
-		when(userRepository.findAll()).thenReturn(List.of(user));
-		List<UserResponseDTO> result = userService.findAll();
-		
-		assertEquals(1, result.size());
-		assertEquals(user.getId(), result.get(0).id());
-		assertEquals(user.getName(), result.get(0).name());
-		assertEquals(user.getEmail(), result.get(0).email());
-		assertEquals(user.getPhone(), result.get(0).phone());
-		assertEquals(user.getRole(), result.get(0).role());
-		
-		verify(userRepository).findAll();
+	
+	private void assertEqualsResponseDTO(User user, UserResponseDTO userResponseDTO) {
+		assertEquals(user.getId(), userResponseDTO.id());
+		assertEquals(user.getName(), userResponseDTO.name());
+		assertEquals(user.getEmail(), userResponseDTO.email());
+		assertEquals(user.getPhone(), userResponseDTO.phone());
+		assertEquals(user.getRole(), userResponseDTO.role());
 	}
 	
-	@Test
-	void findById() {
-		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-		UserResponseDTO result = userService.findById(1L);
+	@Nested
+	@DisplayName("Find All Users")
+	class FindAllUsers {
 		
-		assertEquals(user.getId(), result.id());
-		assertEquals(user.getName(), result.name());
-		assertEquals(user.getEmail(), result.email());
-		assertEquals(user.getPhone(), result.phone());
-		assertEquals(user.getRole(), result.role());
+		@Test
+		@DisplayName("Should return a list of users")
+		void shouldReturnAListOfUsers() {
+			when(userRepository.findAll()).thenReturn(List.of(user));
+			List<UserResponseDTO> userResponseDTOList = userService.findAll();
+			assertEqualsResponseDTO(user, userResponseDTOList.get(0));
+		}
 		
-		verify(userRepository).findById(1L);
+		@Test
+		@DisplayName("Should return an empty list when no users are found")
+		void shouldReturnAnEmptyList() {
+			when(userRepository.findAll()).thenReturn(List.of());
+			List<UserResponseDTO> userResponseDTOList = userService.findAll();
+			assertEquals(0, userResponseDTOList.size());
+		}
 	}
 	
-	@Test
-	void findById_shouldThrowException_whenUserNotFound() {
-		when(userRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityUserNotFoundException.class, () -> userService.findById(1L));
+	@Nested
+	@DisplayName("Find User By ID")
+	class FindUserById {
 		
-		verify(userRepository).findById(1L);
+		@Test
+		@DisplayName("Should return user by id")
+		void shouldReturnUserById() {
+			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			UserResponseDTO userResponseDTO = userService.findById(1L);
+			assertEqualsResponseDTO(user, userResponseDTO);
+		}
+		
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user is not found")
+		void shouldThrowEntityUserNotFoundException() {
+			when(userRepository.findById(1L)).thenReturn(Optional.empty());
+			assertThrows(EntityUserNotFoundException.class, () -> userService.findById(1L));
+		}
+		
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
+		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
+			assertThrows(EntityUserNotFoundException.class, () -> userService.findById(null));
+		}
 	}
 	
-	@Test
-	void create() {
-		when(userRepository.save(any(User.class))).thenReturn(user);
-		UserResponseDTO result = userService.create(userRequestDTO);
+	@Nested
+	@DisplayName("Create User")
+	class CreateUser {
 		
-		assertEquals(user.getId(), result.id());
-		assertEquals(user.getName(), result.name());
-		assertEquals(user.getEmail(), result.email());
-		assertEquals(user.getPhone(), result.phone());
-		assertEquals(user.getRole(), result.role());
+		@Test
+		@DisplayName("Should create a user")
+		void shouldCreateAUser() {
+			when(userRepository.save(any(User.class))).thenReturn(user);
+			when(passwordEncoder.encode(userRequestDTO.password())).thenReturn("encodedPassword");
+			UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
+			assertEqualsResponseDTO(user, userResponseDTO);
+		}
 		
-		verify(userRepository).save(any(User.class));
+		@Test
+		@DisplayName("Should throw exception when user already exists")
+		void shouldThrowExceptionWhenUserAlreadyExists() {
+			when(userRepository.existsByEmail(userRequestDTO.email())).thenReturn(true);
+			assertThrows(EntityUserAlreadyExistsException.class, () -> userService.create(userRequestDTO));
+		}
 	}
 	
-	@Test
-	void update() {
-		UserRequestDTO updated = new UserRequestDTO(
-				"Mary Doe",
-				"mary@gmail.com",
-				"password",
-				"123456789"
-		);
+	@Nested
+	@DisplayName("Update User")
+	class UpdateUser {
 		
-		when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		UserResponseDTO result = userService.update(1L, updated);
+		@Test
+		@DisplayName("Should update a user")
+		void shouldUpdateAUser() {
+			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			when(userRepository.save(any(User.class))).thenReturn(user);
+			UserResponseDTO userResponseDTO = userService.update(1L, userRequestDTO);
+			assertEqualsResponseDTO(user, userResponseDTO);
+		}
 		
-		assertEquals("Mary Doe", result.name());
-		assertEquals("mary@gmail.com", result.email());
-		assertEquals("123456789", result.phone());
-		assertEquals(User.Role.ROLE_USER, result.role());
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user is not found")
+		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
+			when(userRepository.findById(1L)).thenReturn(Optional.empty());
+			assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userRequestDTO));
+		}
 		
-		verify(userRepository).findById(1L);
-		verify(userRepository).save(any(User.class));
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
+		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
+			assertThrows(EntityUserNotFoundException.class, () -> userService.update(null, userRequestDTO));
+		}
 	}
 	
-	@Test
-	void update_shouldThrowException_whenUserNotFound() {
-		when(userRepository.findById(1L)).thenReturn(Optional.empty());
+	@Nested
+	@DisplayName("Delete User")
+	class DeleteUser {
 		
-		assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userRequestDTO));
+		@Test
+		@DisplayName("Should delete a user")
+		void shouldDeleteAUser() {
+			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			userService.delete(1L);
+		}
 		
-		verify(userRepository).findById(1L);
-	}
-	
-	
-	@Test
-	void delete() {
-		when(userRepository.findById(1L)).thenReturn(Optional.ofNullable(user));
-		doNothing().when(userRepository).delete(user);
-		userService.delete(1L);
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user is not found")
+		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
+			when(userRepository.findById(1L)).thenReturn(Optional.empty());
+			assertThrows(EntityUserNotFoundException.class, () -> userService.delete(1L));
+		}
 		
-		verify(userRepository).findById(1L);
-		verify(userRepository).delete(user);
-	}
-	
-	@Test
-	void delete_shouldThrowException_whenUserNotFound() {
-		when(userRepository.findById(1L)).thenReturn(Optional.empty());
-		assertThrows(EntityUserNotFoundException.class, () -> userService.delete(1L));
-		
-		verify(userRepository).findById(1L);
+		@Test
+		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
+		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
+			assertThrows(EntityUserNotFoundException.class, () -> userService.delete(null));
+		}
 	}
 }
