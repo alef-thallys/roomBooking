@@ -5,6 +5,7 @@ import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
+import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
@@ -134,6 +135,7 @@ class UserServiceTest {
 		@Test
 		@DisplayName("Should create a user")
 		void shouldCreateAUser() {
+			when(userRepository.existsByEmail(userRequestDTO.email())).thenReturn(false);
 			when(userRepository.save(any(User.class))).thenReturn(user);
 			when(passwordEncoder.encode(userRequestDTO.password())).thenReturn("encodedPassword");
 			UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
@@ -168,6 +170,14 @@ class UserServiceTest {
 		}
 		
 		@Test
+		@DisplayName("Should throw ForbiddenException when user is not the owner")
+		void shouldThrowForbiddenExceptionWhenUserIsNotTheOwner() {
+			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(user);
+			assertThrows(ForbiddenException.class, () -> userService.update(1L, userUpdateRequestDTO));
+		}
+		
+		@Test
 		@DisplayName("Should throw EntityUserNotFoundException when user is not found")
 		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
 			when(userRepository.findById(1L)).thenReturn(Optional.empty());
@@ -192,6 +202,15 @@ class UserServiceTest {
 			doNothing().when(authService).validateUserOwnership(user);
 			
 			userService.delete(1L);
+			verify(userRepository).delete(user);
+		}
+		
+		@Test
+		@DisplayName("Should throw ForbiddenException when user is not the owner")
+		void shouldThrowForbiddenExceptionWhenUserIsNotTheOwner() {
+			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(user);
+			assertThrows(ForbiddenException.class, () -> userService.delete(1L));
 		}
 		
 		@Test
