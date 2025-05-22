@@ -125,7 +125,7 @@ class RoomServiceTest {
 	
 	@Nested
 	@DisplayName("Update Room")
-	class UpdateRoom    {
+	class UpdateRoom {
 		
 		@Test
 		@DisplayName("should update room")

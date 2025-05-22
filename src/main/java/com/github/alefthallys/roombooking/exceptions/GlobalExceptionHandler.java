@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponseDTO> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
 	}
-	
+
 //	@ExceptionHandler(InvalidJwtException.class)
 //	public ResponseEntity<ApiError> handleInvalidJwtException(InvalidJwtException ex) {
 //		return buildApiError(HttpStatus.UNAUTHORIZED, ex.getMessage());

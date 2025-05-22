@@ -111,7 +111,7 @@ class JwtTokenProviderTest {
 			
 			assertEquals("ROLE_USER", claims.get("role"));
 		}
-
+		
 		
 		@Test
 		@DisplayName("Should return UserDetails for authenticated context")
