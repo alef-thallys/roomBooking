@@ -157,8 +157,9 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal>
-                            <goal>cpd-check</goal> <!-- Detect duplicate code -->
+                            <goal>pmd</goal> <!-- Run PMD analysis -->
+                            <goal>check</goal> <!-- Run PMD checks -->
+                            <goal>cpd-check</goal> <!-- Run PMD CPD checks -->
                         </goals>
                     </execution>
                 </executions>
