@@ -1,9 +1,12 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
 import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.models.User;
+import com.github.alefthallys.roombooking.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +22,9 @@ public class JwtTokenProvider {
 	
 	private final JwtProperties jwtProperties;
 	private Key secretKey;
+	
+	@Autowired
+	private UserRepository userRepository;
 	
 	public JwtTokenProvider(JwtProperties jwtProperties) {
 		this.jwtProperties = jwtProperties;
@@ -76,5 +82,15 @@ public class JwtTokenProvider {
 		} catch (Exception e) {
 			throw new InvalidJwtException("JWT token is invalid");
 		}
+	}
+	
+	public User getCurrentUser() {
+		UserDetails userDetails = getAuthentication();
+		if (userDetails != null) {
+			String username = userDetails.getUsername();
+			return userRepository.findByEmail(username)
+					.orElseThrow(() -> new InvalidJwtException("User not found with email: " + username));
+		}
+		throw new InvalidJwtException("No authenticated user found");
 	}
 }

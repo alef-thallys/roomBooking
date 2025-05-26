@@ -132,7 +132,7 @@ class UserControllerTest {
 		
 		@Test
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnDelete() throws Exception {
+		void shouldThrowMethodArgumentNotValidException() throws Exception {
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", "invalid-id"))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
@@ -144,8 +144,8 @@ class UserControllerTest {
 	class CreateUser {
 		
 		@Test
-		@DisplayName("should create user")
-		void shouldCreateUser() throws Exception {
+		@DisplayName("should create a new user")
+		void shouldCreateNewUser() throws Exception {
 			when(userService.create(userRequestDTO)).thenReturn(userResponseDTO);
 			
 			assertUserResponseDTO(
@@ -219,8 +219,8 @@ class UserControllerTest {
 		
 		@Test
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnDelete() throws Exception {
-			mockMvc.perform(delete(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldThrowMethodArgumentNotValidException() throws Exception {
+			mockMvc.perform(put(URL_PREFIX + "/{id}", "invalid-id"))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}

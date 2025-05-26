@@ -52,11 +52,11 @@ public class Room implements Serializable {
 	public boolean equals(Object o) {
 		if (o == null || getClass() != o.getClass()) return false;
 		Room room = (Room) o;
-		return getCapacity() == room.getCapacity() && isAvailable() == room.isAvailable() && Objects.equals(getId(), room.getId()) && Objects.equals(getName(), room.getName()) && Objects.equals(getDescription(), room.getDescription()) && Objects.equals(getLocation(), room.getLocation());
+		return Objects.equals(getId(), room.getId());
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(getId(), getName(), getDescription(), getCapacity(), isAvailable(), getLocation());
+		return Objects.hashCode(getId());
 	}
 }

@@ -78,6 +78,21 @@ public class GlobalExceptionHandler {
 		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
 	}
 	
+	@ExceptionHandler(EntityReservationNotFoundException.class)
+	public ResponseEntity<ErrorResponseDTO> handleReservationNotFound(EntityReservationNotFoundException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+	}
+	
+	@ExceptionHandler(EntityReservationAlreadyExistsException.class)
+	public ResponseEntity<ErrorResponseDTO> handleReservationAlreadyExists(EntityReservationAlreadyExistsException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+	}
+	
+	@ExceptionHandler(RoomNotAvailableException.class)
+	public ResponseEntity<ErrorResponseDTO> handleRoomNotAvailable(RoomNotAvailableException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+	}
+	
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponseDTO> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
@@ -87,66 +102,10 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponseDTO> handleForbidden(ForbiddenException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
 	}
-
-//	@ExceptionHandler(InvalidJwtException.class)
-//	public ResponseEntity<ApiError> handleInvalidJwtException(InvalidJwtException ex) {
-//		return buildApiError(HttpStatus.UNAUTHORIZED, ex.getMessage());
-//	}
-//
-//	@ExceptionHandler(MethodArgumentNotValidException.class)
-//	public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(
-//			MethodArgumentNotValidException ex,
-//			HttpServletRequest request) {
-//
-//		Map<String, List<String>> errors = new HashMap<>();
-//
-//		ex.getBindingResult().getFieldErrors().forEach(error -> {
-//			String field = error.getField();
-//			String message = error.getDefaultMessage();
-//			errors.computeIfAbsent(field, key -> new ArrayList<>()).add(message);
-//		});
-//
-//		ErrorResponseDTO response = new ErrorResponseDTO(
-//				Instant.now(),
-//				HttpStatus.BAD_REQUEST.value(),
-//				"Validation Failed",
-//				request.getRequestURI(),
-//				errors
-//		);
-//
-//		log.warn("Validation failed at {}: {}", request.getRequestURI(), errors);
-//
-//		return ResponseEntity.badRequest().body(response);
-//	}
-//
-//	@ExceptionHandler(ConstraintViolationException.class)
-//	public ResponseEntity<ErrorResponseDTO> handleConstraintViolation(
-//			ConstraintViolationException ex,
-//			HttpServletRequest request) {
-//
-//		Map<String, List<String>> errors = new HashMap<>();
-//
-//		ex.getConstraintViolations().forEach(violation -> {
-//			String field = violation.getPropertyPath().toString();
-//			String message = violation.getMessage();
-//			errors.computeIfAbsent(field, key -> new ArrayList<>()).add(message);
-//		});
-//
-//		ErrorResponseDTO response = new ErrorResponseDTO(
-//				HttpStatus.BAD_REQUEST.value(),
-//				"Constraint Violation",
-//				request.getRequestURI(),
-//				errors
-//		);
-//
-//		log.warn("Constraint violation at {}: {}", request.getRequestURI(), errors);
-//
-//		return ResponseEntity.badRequest().body(response);
-//	}
-//
-//	@ExceptionHandler(Exception.class)
-//	public ResponseEntity<ApiError> handleGenericException(Exception ex) {
-//		log.error("Unexpected error occurred: ", ex);
-//		return buildApiError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred. Please try again later.");
-//	}
+	
+	@ExceptionHandler({Exception.class, RuntimeException.class})
+	public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex, HttpServletRequest request) {
+		log.error("Unexpected error occurred: ", ex);
+		return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred. Please try again later.", request.getRequestURI());
+	}
 }

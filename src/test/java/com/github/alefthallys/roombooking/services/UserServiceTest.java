@@ -8,7 +8,6 @@ import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException
 import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
-import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,9 +40,6 @@ class UserServiceTest {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 	
-	@Mock
-	private JwtTokenProvider jwtTokenProvider;
-	
 	private User user;
 	private UserRequestDTO userRequestDTO;
 	private UserUpdateRequestDTO userUpdateRequestDTO;
@@ -71,7 +67,6 @@ class UserServiceTest {
 				"password"
 		);
 	}
-	
 	
 	private void assertEqualsResponseDTO(User user, UserResponseDTO userResponseDTO) {
 		assertEquals(user.getId(), userResponseDTO.id());
