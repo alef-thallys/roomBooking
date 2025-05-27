@@ -28,7 +28,7 @@ logging:
     com.github.alefthallys: info
 
 jwt:
-  secret: u4pHe1gHY!dnM8nAq3VJ@vLyxRs#TpBZrW7cZf96m2@qX9WmFS
+  secret: dTRwSGUxZ0hZIWRuTThuQXEzVkpAdkx5eFJzI1RwQlpyVzdjWmY5Nm0yQHFYOVdtRlM=
   expiration: 86400000 # 24h
   issuer: roomBooking
   audience: roomBooking

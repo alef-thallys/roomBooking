@@ -4,6 +4,7 @@ import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Clock;
 import java.util.Base64;
 import java.util.Date;
 
@@ -21,25 +23,31 @@ import java.util.Date;
 public class JwtTokenProvider {
 	
 	private final JwtProperties jwtProperties;
+	private final Clock clock;
 	private Key secretKey;
-	
-	@Autowired
 	private UserRepository userRepository;
 	
-	public JwtTokenProvider(JwtProperties jwtProperties) {
+	@Autowired
+	public JwtTokenProvider(JwtProperties jwtProperties, UserRepository userRepository) {
+		this(jwtProperties, userRepository, Clock.systemUTC());
+	}
+	
+	public JwtTokenProvider(JwtProperties jwtProperties, UserRepository userRepository, Clock clock) {
 		this.jwtProperties = jwtProperties;
+		this.userRepository = userRepository;
+		this.clock = clock;
 	}
 	
 	@PostConstruct
 	protected void init() {
-		byte[] decodedKey = Base64.getEncoder().encode(jwtProperties.getSecret().getBytes());
-		this.secretKey = Keys.hmacShaKeyFor(decodedKey);
+		byte[] decodedKeyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+		this.secretKey = Keys.hmacShaKeyFor(decodedKeyBytes);
 	}
 	
 	public String generateToken(Authentication authentication) {
 		String email = authentication.getName();
-		Date now = new Date();
-		Date expiry = new Date(now.getTime() + jwtProperties.getExpiration());
+		Date now = Date.from(clock.instant());
+		Date expiry = Date.from(clock.instant().plusMillis(jwtProperties.getExpiration()));
 		
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 		
@@ -53,7 +61,7 @@ public class JwtTokenProvider {
 				.setAudience(jwtProperties.getAudience())
 				.setIssuedAt(now)
 				.setExpiration(expiry)
-				.signWith(secretKey)
+				.signWith(secretKey, SignatureAlgorithm.HS256)
 				.compact();
 	}
 	
@@ -68,9 +76,14 @@ public class JwtTokenProvider {
 	
 	public UserDetails getAuthentication() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		boolean isRoleAnonymous = authentication.getAuthorities().stream().anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ANONYMOUS"));
+		if (authentication == null || !authentication.isAuthenticated()) {
+			return null;
+		}
 		
-		if (authentication.isAuthenticated() && !isRoleAnonymous) {
+		boolean isRoleAnonymous = authentication.getAuthorities().stream()
+				.anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ANONYMOUS"));
+		
+		if (!isRoleAnonymous) {
 			return (UserDetails) authentication.getPrincipal();
 		}
 		return null;
@@ -78,9 +91,12 @@ public class JwtTokenProvider {
 	
 	public void validateToken(String token) {
 		try {
-			Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+			Jwts.parserBuilder()
+					.setSigningKey(secretKey)
+					.build()
+					.parseClaimsJws(token);
 		} catch (Exception e) {
-			throw new InvalidJwtException("JWT token is invalid");
+			throw new InvalidJwtException("JWT token is invalid", e);
 		}
 	}
 	
