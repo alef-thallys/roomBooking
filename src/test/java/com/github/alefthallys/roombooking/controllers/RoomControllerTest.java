@@ -8,10 +8,16 @@ import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.RoomService;
+import com.github.alefthallys.roombooking.testBuilders.RoomTestBuilder;
+import com.github.alefthallys.roombooking.testUtils.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -32,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class RoomControllerTest {
 	
-	private static final String URL_PREFIX = "/api/v1/rooms";
+	private static final String URL_PREFIX = TestConstants.API_V1_ROOMS;
 	
 	@Autowired
 	private MockMvc mockMvc;
@@ -54,22 +61,9 @@ class RoomControllerTest {
 	
 	@BeforeEach
 	void setUp() {
-		roomRequestDTO = new RoomRequestDTO(
-				"Room 101",
-				"Conference Room",
-				10,
-				true,
-				"1st Floor"
-		);
 		
-		roomResponseDTO = new RoomResponseDTO(
-				1L,
-				"Room 101",
-				"Conference Room",
-				10,
-				true,
-				"1st Floor"
-		);
+		roomRequestDTO = RoomTestBuilder.aRoom().buildRequestDTO();
+		roomResponseDTO = RoomTestBuilder.aRoom().buildResponseDTO();
 	}
 	
 	private void assertRoomResponseDTO(ResultActions resultActions, RoomResponseDTO roomResponseDTO) throws Exception {
@@ -82,7 +76,7 @@ class RoomControllerTest {
 	}
 	
 	@Nested
-	@DisplayName("GET /api/v1/rooms")
+	@DisplayName("GET " + URL_PREFIX)
 	class FindAllRooms {
 		
 		@Test
@@ -102,7 +96,7 @@ class RoomControllerTest {
 	}
 	
 	@Nested
-	@DisplayName("GET /api/v1/rooms/{id}")
+	@DisplayName("GET " + URL_PREFIX + "/{id}")
 	class FindRoomById {
 		
 		@Test
@@ -126,18 +120,27 @@ class RoomControllerTest {
 					.andExpect(jsonPath("$.message").value("Room not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnDelete() throws Exception {
-			mockMvc.perform(get(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
+			mockMvc.perform(get(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 	}
 	
 	@Nested
-	@DisplayName("POST /api/v1/rooms")
+	@DisplayName("POST " + URL_PREFIX)
 	class CreateRoom {
+		
+		private static Stream<Arguments> invalidRoomRequestDTOs() {
+			return Stream.of(
+					Arguments.of(RoomTestBuilder.aRoom().withName(null).buildRequestDTO()),
+					Arguments.of(RoomTestBuilder.aRoom().withCapacity(-1).buildRequestDTO()),
+					Arguments.of(RoomTestBuilder.aRoom().withLocation("").buildRequestDTO())
+			);
+		}
 		
 		@Test
 		@DisplayName("should create a room")
@@ -153,20 +156,13 @@ class RoomControllerTest {
 			);
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when request body is invalid: {0}")
+		@MethodSource("invalidRoomRequestDTOs")
 		@DisplayName("should return 400 when request is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnCreate() throws Exception {
-			roomRequestDTO = new RoomRequestDTO(
-					null,
-					"Conference Room",
-					10,
-					true,
-					"1st Floor"
-			);
-			
+		void shouldReturnBadRequestWhenCreateRoomWithInvalidData(RoomRequestDTO invalidDto) throws Exception {
 			mockMvc.perform(post(URL_PREFIX)
 							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(roomRequestDTO)))
+							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
@@ -185,8 +181,16 @@ class RoomControllerTest {
 	}
 	
 	@Nested
-	@DisplayName("PUT /api/v1/rooms/{id}")
+	@DisplayName("PUT " + URL_PREFIX + "/{id}")
 	class UpdateRoom {
+		
+		private static Stream<Arguments> invalidRoomRequestDTOs() {
+			return Stream.of(
+					Arguments.of(RoomTestBuilder.aRoom().withName(null).buildRequestDTO()),
+					Arguments.of(RoomTestBuilder.aRoom().withCapacity(-1).buildRequestDTO()),
+					Arguments.of(RoomTestBuilder.aRoom().withLocation("").buildRequestDTO())
+			);
+		}
 		
 		@Test
 		@DisplayName("should update a room")
@@ -214,27 +218,20 @@ class RoomControllerTest {
 					.andExpect(jsonPath("$.message").value("Room not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when request body is invalid: {0}")
+		@MethodSource("invalidRoomRequestDTOs")
 		@DisplayName("should return 400 when request is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnCreate() throws Exception {
-			roomRequestDTO = new RoomRequestDTO(
-					null,
-					"Conference Room",
-					10,
-					true,
-					"1st Floor"
-			);
-			
-			mockMvc.perform(post(URL_PREFIX)
+		void shouldReturnBadRequestWhenUpdateRoomWithInvalidData(RoomRequestDTO invalidDto) throws Exception {
+			mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
 							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(roomRequestDTO)))
+							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 	}
 	
 	@Nested
-	@DisplayName("DELETE /api/v1/rooms/{id}")
+	@DisplayName("DELETE " + URL_PREFIX + "/{id}")
 	class DeleteRoom {
 		
 		@Test
@@ -256,10 +253,11 @@ class RoomControllerTest {
 					.andExpect(jsonPath("$.message").value("Room not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnDelete() throws Exception {
-			mockMvc.perform(delete(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
+			mockMvc.perform(delete(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}

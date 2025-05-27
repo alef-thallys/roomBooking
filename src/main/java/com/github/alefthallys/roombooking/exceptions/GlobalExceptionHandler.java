@@ -105,7 +105,6 @@ public class GlobalExceptionHandler {
 	
 	@ExceptionHandler({Exception.class, RuntimeException.class})
 	public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex, HttpServletRequest request) {
-		log.error("Unexpected error occurred: ", ex);
 		return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred. Please try again later.", request.getRequestURI());
 	}
 }

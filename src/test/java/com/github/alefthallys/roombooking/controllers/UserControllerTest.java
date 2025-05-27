@@ -6,14 +6,19 @@ import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
-import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.UserService;
+import com.github.alefthallys.roombooking.testBuilders.UserTestBuilder;
+import com.github.alefthallys.roombooking.testUtils.TestConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -33,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 	
-	private static final String URL_PREFIX = "/api/v1/users";
+	private static final String URL_PREFIX = TestConstants.API_V1_USERS;
 	
 	@Autowired
 	private MockMvc mockMvc;
@@ -56,26 +62,9 @@ class UserControllerTest {
 	
 	@BeforeEach
 	void setUp() {
-		userRequestDTO = new UserRequestDTO(
-				"John Doe",
-				"john@gmail.com",
-				"password",
-				"12997665045"
-		);
-		
-		userUpdateRequestDTO = new UserUpdateRequestDTO(
-				"John Doe",
-				"password",
-				"12997665045"
-		);
-		
-		userResponseDTO = new UserResponseDTO(
-				1L,
-				"John Doe",
-				"john@gmail.com",
-				"12997665045",
-				User.Role.ROLE_USER
-		);
+		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
+		userUpdateRequestDTO = UserTestBuilder.anUser().buildUpdateRequestDTO();
+		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
 	}
 	
 	private void assertUserResponseDTO(ResultActions resultActions, UserResponseDTO userResponseDTO) throws Exception {
@@ -87,7 +76,7 @@ class UserControllerTest {
 	}
 	
 	@Nested
-	@DisplayName("GET /api/v1/users")
+	@DisplayName("GET " + URL_PREFIX)
 	class FindAllUsers {
 		
 		@Test
@@ -106,7 +95,7 @@ class UserControllerTest {
 	}
 	
 	@Nested
-	@DisplayName("GET /api/v1/users/{id}")
+	@DisplayName("GET " + URL_PREFIX + "/{id}")
 	class FindUserById {
 		
 		@Test
@@ -130,18 +119,28 @@ class UserControllerTest {
 					.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidException() throws Exception {
-			mockMvc.perform(delete(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
+			mockMvc.perform(get(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 	}
 	
 	@Nested
-	@DisplayName("POST /api/v1/users")
+	@DisplayName("POST " + URL_PREFIX)
 	class CreateUser {
+		
+		private static Stream<Arguments> invalidUserRequestDTOs() {
+			return Stream.of(
+					Arguments.of(UserTestBuilder.anUser().withEmail("invalid-email").buildRequestDTO()),
+					Arguments.of(UserTestBuilder.anUser().withName(null).buildRequestDTO()),
+					Arguments.of(UserTestBuilder.anUser().withPassword(null).buildRequestDTO()),
+					Arguments.of(UserTestBuilder.anUser().withPhone("").buildRequestDTO())
+			);
+		}
 		
 		@Test
 		@DisplayName("should create a new user")
@@ -169,26 +168,20 @@ class UserControllerTest {
 					.andExpect(jsonPath("$.message").value("User already exists with email: " + userRequestDTO.email()));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when request body is invalid: {0}")
+		@MethodSource("invalidUserRequestDTOs")
 		@DisplayName("should return 400 when request body is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnCreate() throws Exception {
-			userRequestDTO = new UserRequestDTO(
-					"John Doe",
-					"invalid-email",
-					"password",
-					"12997665045"
-			);
-			
+		void shouldReturnBadRequestWhenRegisteringUserWithInvalidData(UserRequestDTO invalidDto) throws Exception {
 			mockMvc.perform(post(URL_PREFIX)
 							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(userRequestDTO)))
+							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 	}
 	
 	@Nested
-	@DisplayName("PUT /api/v1/users/{id}")
+	@DisplayName("PUT " + URL_PREFIX + "/{id}")
 	class UpdateUser {
 		
 		@Test
@@ -199,7 +192,7 @@ class UserControllerTest {
 			assertUserResponseDTO(
 					mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
 									.contentType(MediaType.APPLICATION_JSON)
-									.content(objectMapper.writeValueAsString(userRequestDTO)))
+									.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
 							.andExpect(status().isOk()),
 					userResponseDTO
 			);
@@ -212,22 +205,25 @@ class UserControllerTest {
 			
 			mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
 							.contentType(MediaType.APPLICATION_JSON)
-							.content(objectMapper.writeValueAsString(userRequestDTO)))
+							.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
 					.andExpect(status().isNotFound())
 					.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidException() throws Exception {
-			mockMvc.perform(put(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
+			mockMvc.perform(put(URL_PREFIX + "/{id}", invalidId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
 	}
 	
 	@Nested
-	@DisplayName("DELETE /api/v1/users/{id}")
+	@DisplayName("DELETE " + URL_PREFIX + "/{id}")
 	class DeleteUser {
 		
 		@Test
@@ -251,10 +247,11 @@ class UserControllerTest {
 					.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 		}
 		
-		@Test
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
-		void shouldThrowMethodArgumentNotValidExceptionOnDelete() throws Exception {
-			mockMvc.perform(delete(URL_PREFIX + "/{id}", "invalid-id"))
+		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
+			mockMvc.perform(delete(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Validation failed"));
 		}
