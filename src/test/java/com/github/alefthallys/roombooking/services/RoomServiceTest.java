@@ -1,9 +1,9 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
+import com.github.alefthallys.roombooking.dtos.Room.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,10 +41,9 @@ class RoomServiceTest {
 		room.setName("Room 101");
 		room.setDescription("A small room for meetings");
 		room.setCapacity(10);
-		room.setAvailable(true);
 		room.setLocation("1st Floor");
 		
-		roomRequestDTO = new RoomRequestDTO("Room 101", "A small room for meetings", 10, true, "1st Floor");
+		roomRequestDTO = new RoomRequestDTO("Room 101", "A small room for meetings", 10, "1st Floor");
 	}
 	
 	private void assertEqualsResponseDTO(Room room, RoomResponseDTO roomResponseDTO) {
@@ -52,7 +51,6 @@ class RoomServiceTest {
 		assertEquals(room.getName(), roomResponseDTO.name());
 		assertEquals(room.getDescription(), roomResponseDTO.description());
 		assertEquals(room.getCapacity(), roomResponseDTO.capacity());
-		assertEquals(room.isAvailable(), roomResponseDTO.available());
 		assertEquals(room.getLocation(), roomResponseDTO.location());
 	}
 	

@@ -1,9 +1,9 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
+import com.github.alefthallys.roombooking.dtos.Room.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.mappers.RoomMapper;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
@@ -64,7 +64,6 @@ public class RoomService {
 		room.setName(roomRequestDTO.name());
 		room.setDescription(roomRequestDTO.description());
 		room.setCapacity(roomRequestDTO.capacity());
-		room.setAvailable(roomRequestDTO.available());
 		room.setLocation(roomRequestDTO.location());
 		
 		if (roomRepository.existsByName(room.getName())) {

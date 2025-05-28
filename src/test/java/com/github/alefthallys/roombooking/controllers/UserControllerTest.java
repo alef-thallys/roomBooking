@@ -1,11 +1,11 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
-import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
-import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.UserService;

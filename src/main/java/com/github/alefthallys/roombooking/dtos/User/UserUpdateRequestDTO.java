@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.dtos;
+package com.github.alefthallys.roombooking.dtos.User;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

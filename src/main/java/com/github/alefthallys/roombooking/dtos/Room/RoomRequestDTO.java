@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.dtos;
+package com.github.alefthallys.roombooking.dtos.Room;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Min;
@@ -19,9 +19,6 @@ public record RoomRequestDTO(
 		@Min(value = 2, message = "Capacity must be at least 2")
 		@NotNull(message = "Capacity is required")
 		int capacity,
-		
-		@NotNull(message = "Available status is required")
-		boolean available,
 		
 		@Size(max = 100, message = "Location must be less than 100 characters")
 		@NotBlank(message = "Location is required")

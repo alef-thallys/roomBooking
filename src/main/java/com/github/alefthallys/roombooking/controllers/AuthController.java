@@ -2,8 +2,8 @@ package com.github.alefthallys.roombooking.controllers;
 
 import com.github.alefthallys.roombooking.dtos.JwtResponseDTO;
 import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.UserService;
 import jakarta.validation.Valid;

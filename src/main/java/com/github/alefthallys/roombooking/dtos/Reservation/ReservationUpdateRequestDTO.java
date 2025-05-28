@@ -1,5 +1,4 @@
-package com.github.alefthallys.roombooking.dtos;
-
+package com.github.alefthallys.roombooking.dtos.Reservation;
 
 import com.github.alefthallys.roombooking.annotations.ValidReservationDates;
 import jakarta.validation.constraints.Future;
@@ -9,10 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @ValidReservationDates
-public record ReservationRequestDTO(
-		@NotNull(message = "Room ID is required")
-		Long roomId,
-		
+public record ReservationUpdateRequestDTO(
 		@NotNull(message = "Start date is required")
 		@FutureOrPresent(message = "Start date must be today or in the future")
 		LocalDateTime startDate,

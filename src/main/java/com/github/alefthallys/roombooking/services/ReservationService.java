@@ -1,11 +1,10 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.ReservationRequestDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationResponseDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationUpdateRequestDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityReservationNotFoundException;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
-import com.github.alefthallys.roombooking.exceptions.RoomNotAvailableException;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.mappers.ReservationMapper;
 import com.github.alefthallys.roombooking.models.Reservation;
 import com.github.alefthallys.roombooking.models.Room;
@@ -63,10 +62,6 @@ public class ReservationService {
 	public ReservationResponseDTO create(ReservationRequestDTO reservationDTO) {
 		if (!roomRepository.existsById(reservationDTO.roomId())) {
 			throw new EntityRoomNotFoundException(reservationDTO.roomId());
-		}
-		
-		if (!roomRepository.isRoomAvailable(reservationDTO.roomId())) {
-			throw new RoomNotAvailableException(reservationDTO.roomId());
 		}
 		
 		User currentUser = jwtTokenProvider.getCurrentUser();

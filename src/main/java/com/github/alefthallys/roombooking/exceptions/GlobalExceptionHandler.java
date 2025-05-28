@@ -2,6 +2,12 @@ package com.github.alefthallys.roombooking.exceptions;
 
 import com.github.alefthallys.roombooking.dtos.ErrorResponseDTO;
 import com.github.alefthallys.roombooking.dtos.FieldErrorDTO;
+import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -85,11 +91,6 @@ public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(EntityReservationAlreadyExistsException.class)
 	public ResponseEntity<ErrorResponseDTO> handleReservationAlreadyExists(EntityReservationAlreadyExistsException ex, HttpServletRequest request) {
-		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
-	}
-	
-	@ExceptionHandler(RoomNotAvailableException.class)
-	public ResponseEntity<ErrorResponseDTO> handleRoomNotAvailable(RoomNotAvailableException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
 	}
 	

@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.dtos;
+package com.github.alefthallys.roombooking.dtos.Room;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -8,7 +8,6 @@ public record RoomResponseDTO(
 		String name,
 		String description,
 		int capacity,
-		boolean available,
 		String location
 ) {
 }

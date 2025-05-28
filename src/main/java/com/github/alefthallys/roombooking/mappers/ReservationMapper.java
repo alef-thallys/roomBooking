@@ -1,7 +1,7 @@
 package com.github.alefthallys.roombooking.mappers;
 
-import com.github.alefthallys.roombooking.dtos.ReservationRequestDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.models.Reservation;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.models.User;

@@ -1,10 +1,10 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomAlreadyExistsException;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
+import com.github.alefthallys.roombooking.dtos.Room.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.RoomService;
@@ -71,7 +71,6 @@ class RoomControllerTest {
 				.andExpect(jsonPath("$.name").value(roomResponseDTO.name()))
 				.andExpect(jsonPath("$.description").value(roomResponseDTO.description()))
 				.andExpect(jsonPath("$.capacity").value(roomResponseDTO.capacity()))
-				.andExpect(jsonPath("$.available").value(roomResponseDTO.available()))
 				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
 	}
 	
@@ -90,7 +89,6 @@ class RoomControllerTest {
 					.andExpect(jsonPath("$[0].name").value(roomResponseDTO.name()))
 					.andExpect(jsonPath("$[0].description").value(roomResponseDTO.description()))
 					.andExpect(jsonPath("$[0].capacity").value(roomResponseDTO.capacity()))
-					.andExpect(jsonPath("$[0].available").value(roomResponseDTO.available()))
 					.andExpect(jsonPath("$[0].location").value(roomResponseDTO.location()));
 		}
 	}

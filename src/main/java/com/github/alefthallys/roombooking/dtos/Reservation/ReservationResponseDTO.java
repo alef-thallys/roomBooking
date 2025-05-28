@@ -1,7 +1,9 @@
-package com.github.alefthallys.roombooking.dtos;
+package com.github.alefthallys.roombooking.dtos.Reservation;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 
 import java.time.LocalDateTime;
 

@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.exceptions;
+package com.github.alefthallys.roombooking.exceptions.Reservation;
 
 public class EntityReservationNotFoundException extends RuntimeException {
 	public EntityReservationNotFoundException(Long id) {

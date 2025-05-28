@@ -35,16 +35,12 @@ public class Room implements Serializable {
 	private int capacity;
 	
 	@Column(nullable = false)
-	private boolean available;
-	
-	@Column(nullable = false)
 	private String location;
 	
-	public Room(String name, String description, int capacity, boolean available, String location) {
+	public Room(String name, String description, int capacity, String location) {
 		this.name = name;
 		this.description = description;
 		this.capacity = capacity;
-		this.available = available;
 		this.location = location;
 	}
 	

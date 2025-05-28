@@ -1,7 +1,7 @@
 package com.github.alefthallys.roombooking.mappers;
 
-import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
 import com.github.alefthallys.roombooking.models.Room;
 
 public class RoomMapper {
@@ -12,7 +12,6 @@ public class RoomMapper {
 				room.getName(),
 				room.getDescription(),
 				room.getCapacity(),
-				room.isAvailable(),
 				room.getLocation()
 		);
 	}
@@ -22,7 +21,6 @@ public class RoomMapper {
 				roomDTO.name(),
 				roomDTO.description(),
 				roomDTO.capacity(),
-				roomDTO.available(),
 				roomDTO.location()
 		);
 	}

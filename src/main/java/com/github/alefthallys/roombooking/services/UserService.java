@@ -1,10 +1,10 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
-import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityUserAlreadyExistsException;
-import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.exceptions.User.EntityUserNotFoundException;
 import com.github.alefthallys.roombooking.mappers.UserMapper;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;

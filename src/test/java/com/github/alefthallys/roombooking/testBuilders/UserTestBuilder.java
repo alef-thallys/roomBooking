@@ -1,9 +1,9 @@
 package com.github.alefthallys.roombooking.testBuilders;
 
 import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
-import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.models.User;
 
 public class UserTestBuilder {

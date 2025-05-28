@@ -1,11 +1,10 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.dtos.ReservationRequestDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationResponseDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationUpdateRequestDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityReservationNotFoundException;
-import com.github.alefthallys.roombooking.exceptions.EntityRoomNotFoundException;
-import com.github.alefthallys.roombooking.exceptions.RoomNotAvailableException;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
+import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Reservation;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.models.User;
@@ -142,7 +141,6 @@ class ReservationServiceTest {
 		@DisplayName("Should create a new reservation")
 		void shouldCreateNewReservation() {
 			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(true);
-			when(roomRepository.isRoomAvailable(reservationRequestDTO.roomId())).thenReturn(true);
 			when(jwtTokenProvider.getCurrentUser()).thenReturn(user);
 			when(roomRepository.findById(reservationRequestDTO.roomId())).thenReturn(Optional.of(room));
 			when(reservationRepository.save(any(Reservation.class))).thenReturn(reservation);
@@ -158,15 +156,6 @@ class ReservationServiceTest {
 		void shouldThrowEntityRoomNotFoundExceptionWhenRoomDoesNotExist() {
 			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(false);
 			assertThrows(EntityRoomNotFoundException.class, () -> reservationService.create(reservationRequestDTO));
-			verify(reservationRepository, never()).save(any(Reservation.class));
-		}
-		
-		@Test
-		@DisplayName("Should throw RoomNotAvailableException when room is not available")
-		void shouldThrowRoomNotAvailableExceptionWhenRoomIsNotAvailable() {
-			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(true);
-			when(roomRepository.isRoomAvailable(reservationRequestDTO.roomId())).thenReturn(false);
-			assertThrows(RoomNotAvailableException.class, () -> reservationService.create(reservationRequestDTO));
 			verify(reservationRepository, never()).save(any(Reservation.class));
 		}
 	}

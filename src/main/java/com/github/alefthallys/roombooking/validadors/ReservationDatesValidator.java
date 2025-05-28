@@ -1,8 +1,8 @@
 package com.github.alefthallys.roombooking.validadors;
 
 import com.github.alefthallys.roombooking.annotations.ValidReservationDates;
-import com.github.alefthallys.roombooking.dtos.ReservationRequestDTO;
-import com.github.alefthallys.roombooking.dtos.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

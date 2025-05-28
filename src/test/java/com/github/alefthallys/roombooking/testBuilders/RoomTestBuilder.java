@@ -1,7 +1,7 @@
 package com.github.alefthallys.roombooking.testBuilders;
 
-import com.github.alefthallys.roombooking.dtos.RoomRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RoomResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Room.RoomResponseDTO;
 import com.github.alefthallys.roombooking.models.Room;
 
 public class RoomTestBuilder {
@@ -53,16 +53,15 @@ public class RoomTestBuilder {
 		room.setName(name);
 		room.setDescription(description);
 		room.setCapacity(capacity);
-		room.setAvailable(available);
 		room.setLocation(location);
 		return room;
 	}
 	
 	public RoomRequestDTO buildRequestDTO() {
-		return new RoomRequestDTO(name, description, capacity, available, location);
+		return new RoomRequestDTO(name, description, capacity, location);
 	}
 	
 	public RoomResponseDTO buildResponseDTO() {
-		return new RoomResponseDTO(id, name, description, capacity, available, location);
+		return new RoomResponseDTO(id, name, description, capacity, location);
 	}
 }

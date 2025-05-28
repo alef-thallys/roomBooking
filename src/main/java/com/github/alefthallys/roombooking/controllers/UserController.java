@@ -1,8 +1,8 @@
 package com.github.alefthallys.roombooking.controllers;
 
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
-import com.github.alefthallys.roombooking.dtos.UserUpdateRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

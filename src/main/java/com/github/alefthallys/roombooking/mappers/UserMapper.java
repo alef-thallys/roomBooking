@@ -1,7 +1,7 @@
 package com.github.alefthallys.roombooking.mappers;
 
-import com.github.alefthallys.roombooking.dtos.UserRequestDTO;
-import com.github.alefthallys.roombooking.dtos.UserResponseDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
+import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.models.User;
 
 public class UserMapper {
