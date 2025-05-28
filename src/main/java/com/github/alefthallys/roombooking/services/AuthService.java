@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
 import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
+import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,8 +17,15 @@ public class AuthService {
 	}
 	
 	void validateUserOwnership(User userById) {
-		UserDetails authentication = jwtTokenProvider.getAuthentication();
-		if (!authentication.getUsername().equals(userById.getEmail())) {
+		UserDetails authentication = null;
+		
+		try {
+			authentication = jwtTokenProvider.getAuthentication();
+		} catch (InvalidJwtException e) {
+			throw new ForbiddenException();
+		}
+		
+		if (authentication == null || !authentication.getUsername().equals(userById.getEmail())) {
 			throw new ForbiddenException();
 		}
 	}
