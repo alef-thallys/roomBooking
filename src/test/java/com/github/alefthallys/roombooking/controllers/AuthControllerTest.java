@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
+import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
 import com.github.alefthallys.roombooking.exceptions.User.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.repositories.UserRepository;
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
+import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.services.UserService;
 import com.github.alefthallys.roombooking.testBuilders.UserTestBuilder;
 import com.github.alefthallys.roombooking.testUtils.TestConstants;
@@ -23,7 +26,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -31,8 +36,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,10 +65,17 @@ class AuthControllerTest {
 	@MockitoBean
 	private UserService userService;
 	
+	@MockitoBean
+	private CustomUserDetailsService customUserDetailsService;
+	
+	@MockitoBean
+	private UserRepository userRepository;
+	
 	private LoginRequestDTO loginRequestDTO;
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
-	private String token;
+	private String accessToken;
+	private String refreshToken;
 	
 	@BeforeEach
 	void setUp() {
@@ -72,7 +83,8 @@ class AuthControllerTest {
 		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
 		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
 		
-		token = "my-jwt-token";
+		accessToken = "my-jwt-access-token";
+		refreshToken = "my-jwt-refresh-token";
 	}
 	
 	private void assertUserResponseDTO(ResultActions resultActions, UserResponseDTO userResponseDTO) throws Exception {
@@ -140,23 +152,26 @@ class AuthControllerTest {
 		
 		private static Stream<Arguments> invalidLoginRequestDTOs() {
 			return Stream.of(
-					Arguments.of(UserTestBuilder.anUser().withEmail("invalid-email").buildLoginRequestDTO()), // Email inválido
-					Arguments.of(UserTestBuilder.anUser().withPassword(null).buildLoginRequestDTO()), // Senha nula
-					Arguments.of(new LoginRequestDTO(null, "password")) // Email nulo
+					Arguments.of(UserTestBuilder.anUser().withEmail("invalid-email").buildLoginRequestDTO()),
+					Arguments.of(UserTestBuilder.anUser().withPassword(null).buildLoginRequestDTO()),
+					Arguments.of(new LoginRequestDTO(null, "password"))
 			);
 		}
 		
 		@Test
-		@DisplayName("should login and return JWT token")
-		void shouldLoginAndReturnJwtToken() throws Exception {
-			when(authenticationManager.authenticate(any())).thenReturn(mock(Authentication.class));
-			when(jwtTokenProvider.generateToken(any())).thenReturn(token);
+		@DisplayName("should login and return JWT and refresh token")
+		void shouldLoginAndReturnJwtAndRefreshToken() throws Exception {
+			Authentication authMock = mock(Authentication.class);
+			when(authenticationManager.authenticate(any())).thenReturn(authMock);
+			when(jwtTokenProvider.generateToken(authMock)).thenReturn(accessToken);
+			when(jwtTokenProvider.generateRefreshToken(authMock)).thenReturn(refreshToken);
 			
 			mockMvc.perform(post(URL_PREFIX + "/login")
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(loginRequestDTO)))
 					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.token").value(token));
+					.andExpect(jsonPath("$.token").value(accessToken))
+					.andExpect(jsonPath("$.refreshToken").value(refreshToken));
 		}
 		
 		@ParameterizedTest(name = "should return 400 when request body is invalid: {0}")
@@ -179,6 +194,57 @@ class AuthControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(loginRequestDTO)))
 					.andExpect(status().isUnauthorized());
+		}
+	}
+	
+	@Nested
+	@DisplayName("POST " + URL_PREFIX + "/refresh-token")
+	class RefreshToken {
+		
+		@Test
+		@DisplayName("should return new JWT and refresh token when refresh token is valid")
+		void shouldReturnNewJwtAndRefreshTokenWhenRefreshTokenIsValid() throws Exception {
+			String userEmail = loginRequestDTO.email();
+			UserDetails userDetailsMock = org.springframework.security.core.userdetails.User.withUsername(userEmail)
+					.password("encodedPassword")
+					.roles("USER")
+					.build();
+			Authentication authMock = new UsernamePasswordAuthenticationToken(userDetailsMock, null, userDetailsMock.getAuthorities());
+			
+			when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(userEmail);
+			when(customUserDetailsService.loadUserByUsername(userEmail)).thenReturn(userDetailsMock);
+			when(jwtTokenProvider.generateToken(any(Authentication.class))).thenReturn("new-access-token");
+			when(jwtTokenProvider.generateRefreshToken(any(Authentication.class))).thenReturn("new-refresh-token");
+			
+			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
+							.contentType(MediaType.TEXT_PLAIN)
+							.content(refreshToken))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.token").value("new-access-token"))
+					.andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
+		}
+		
+		@Test
+		@DisplayName("should return 401 when refresh token is invalid")
+		void shouldReturnUnauthorizedWhenRefreshTokenIsInvalid() throws Exception {
+			String invalidRefreshToken = "invalid-refresh-token";
+			doThrow(new InvalidJwtException("Invalid refresh token")).when(jwtTokenProvider).validateRefreshToken(invalidRefreshToken);
+			
+			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
+							.contentType(MediaType.TEXT_PLAIN)
+							.content(invalidRefreshToken))
+					.andExpect(status().isUnauthorized())
+					.andExpect(jsonPath("$.message").value("Invalid refresh token"));
+		}
+		
+		@Test
+		@DisplayName("should return 400 when refresh token is missing")
+		void shouldReturnBadRequestWhenRefreshTokenIsMissing() throws Exception {
+			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
+							.contentType(MediaType.TEXT_PLAIN)
+							.content(""))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 }

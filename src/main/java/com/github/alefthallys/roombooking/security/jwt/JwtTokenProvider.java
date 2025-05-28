@@ -18,6 +18,7 @@ import java.security.Key;
 import java.time.Clock;
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -25,6 +26,7 @@ public class JwtTokenProvider {
 	private final JwtProperties jwtProperties;
 	private final Clock clock;
 	private Key secretKey;
+	private Key refreshSecretKey;
 	private UserRepository userRepository;
 	
 	@Autowired
@@ -40,8 +42,15 @@ public class JwtTokenProvider {
 	
 	@PostConstruct
 	protected void init() {
-		byte[] decodedKeyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
-		this.secretKey = Keys.hmacShaKeyFor(decodedKeyBytes);
+		try {
+			byte[] decodedKeyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+			this.secretKey = Keys.hmacShaKeyFor(decodedKeyBytes);
+			byte[] decodedRefreshKeyBytes = Base64.getDecoder().decode(jwtProperties.getRefreshSecret());
+			this.refreshSecretKey = Keys.hmacShaKeyFor(decodedRefreshKeyBytes);
+		} catch (IllegalArgumentException e) {
+			throw new IllegalStateException("Failed to decode JWT secret or refresh secret from Base64. " +
+					"Please check 'jwt.secret' and 'jwt.refreshSecret' in application.yml.", e);
+		}
 	}
 	
 	public String generateToken(Authentication authentication) {
@@ -65,9 +74,35 @@ public class JwtTokenProvider {
 				.compact();
 	}
 	
+	public String generateRefreshToken(Authentication authentication) {
+		String email = authentication.getName();
+		Date now = Date.from(clock.instant());
+		Date expiry = Date.from(clock.instant().plusMillis(jwtProperties.getRefreshExpiration()));
+		
+		return Jwts.builder()
+				.setSubject(email)
+				.setId(UUID.randomUUID().toString())
+				.claim("type", "refresh")
+				.setIssuer(jwtProperties.getIssuer())
+				.setAudience(jwtProperties.getAudience())
+				.setIssuedAt(now)
+				.setExpiration(expiry)
+				.signWith(refreshSecretKey, SignatureAlgorithm.HS256)
+				.compact();
+	}
+	
 	public String getUsernameFromToken(String token) {
 		return Jwts.parserBuilder()
 				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody()
+				.getSubject();
+	}
+	
+	public String getUsernameFromRefreshToken(String token) {
+		return Jwts.parserBuilder()
+				.setSigningKey(refreshSecretKey)
 				.build()
 				.parseClaimsJws(token)
 				.getBody()
@@ -97,6 +132,17 @@ public class JwtTokenProvider {
 					.parseClaimsJws(token);
 		} catch (Exception e) {
 			throw new InvalidJwtException("JWT token is invalid", e);
+		}
+	}
+	
+	public void validateRefreshToken(String token) {
+		try {
+			Jwts.parserBuilder()
+					.setSigningKey(refreshSecretKey)
+					.build()
+					.parseClaimsJws(token);
+		} catch (Exception e) {
+			throw new InvalidJwtException("Refresh token is invalid", e);
 		}
 	}
 	

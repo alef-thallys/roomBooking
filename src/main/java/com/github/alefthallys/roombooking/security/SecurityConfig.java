@@ -28,6 +28,7 @@ public class SecurityConfig {
 						authz -> authz
 								.requestMatchers("/api/v1/auth/login").permitAll()
 								.requestMatchers("/api/v1/auth/register").permitAll()
+								.requestMatchers("/api/v1/auth/refresh-token").permitAll()
 								.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

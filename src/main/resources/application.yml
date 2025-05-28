@@ -34,3 +34,5 @@ jwt:
   audience: roomBooking
   header: Authorization
   prefix: Bearer
+  refreshSecret: aDNzSDFsNXBjMnQ4VjQ1ZzVjNjBqZjd3eTNxMjdyOWUxNmQwazQ5Z3cxY2Myc2Q0ZDNlMnMzZnA3YjFzZDNmNGc1NA== # Add this line (Example: 7 days expiration)
+  refreshExpiration: 604800000 # 7 days
