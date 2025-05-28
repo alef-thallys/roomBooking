@@ -125,7 +125,7 @@ class UserControllerTest {
 		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(get(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -176,7 +176,7 @@ class UserControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -218,7 +218,7 @@ class UserControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -253,7 +253,7 @@ class UserControllerTest {
 		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 }

@@ -50,6 +50,7 @@ class JwtTokenProviderTest {
 		String secretString = Base64.getEncoder().encodeToString(testSecretKey.getEncoded());
 		
 		Mockito.lenient().when(jwtProperties.getSecret()).thenReturn(secretString);
+		Mockito.lenient().when(jwtProperties.getRefreshSecret()).thenReturn(secretString);
 		Mockito.lenient().when(jwtProperties.getExpiration()).thenReturn(DEFAULT_EXPIRATION_MILLIS);
 		Mockito.lenient().when(jwtProperties.getIssuer()).thenReturn("testIssuer");
 		Mockito.lenient().when(jwtProperties.getAudience()).thenReturn("testAudience");
@@ -98,6 +99,7 @@ class JwtTokenProviderTest {
 			JwtProperties shortExpiryProps = new JwtProperties();
 			Key localTestSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 			shortExpiryProps.setSecret(Base64.getEncoder().encodeToString(localTestSecretKey.getEncoded()));
+			shortExpiryProps.setRefreshSecret(Base64.getEncoder().encodeToString(localTestSecretKey.getEncoded()));
 			shortExpiryProps.setExpiration(100);
 			shortExpiryProps.setIssuer("testIssuer");
 			shortExpiryProps.setAudience("testAudience");

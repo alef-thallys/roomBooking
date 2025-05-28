@@ -18,6 +18,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -41,8 +42,6 @@ public class GlobalExceptionHandler {
 			MethodArgumentNotValidException ex,
 			HttpServletRequest request) {
 		
-		log.warn("Validation failed at {}: {}", request.getRequestURI(), ex.getMessage());
-		
 		List<FieldErrorDTO> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
 				.map(error -> new FieldErrorDTO(
 						error.getField(),
@@ -53,7 +52,7 @@ public class GlobalExceptionHandler {
 		ErrorResponseDTO errorResponse = new ErrorResponseDTO(
 				HttpStatus.BAD_REQUEST.value(),
 				HttpStatus.BAD_REQUEST.getReasonPhrase(),
-				"Validation failed",
+				"Invalid request body format or missing content",
 				request.getRequestURI(),
 				fieldErrors
 		);
@@ -72,7 +71,7 @@ public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	public ResponseEntity<ErrorResponseDTO> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-		return buildErrorResponse(HttpStatus.BAD_REQUEST, "Validation failed", request.getRequestURI());
+		return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request body format or missing content", request.getRequestURI());
 	}
 	
 	@ExceptionHandler(EntityRoomNotFoundException.class)
@@ -113,6 +112,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request body format or missing content", request.getRequestURI());
+	}
+	
+	@ExceptionHandler(ResponseStatusException.class)
+	public ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getReason(), request.getRequestURI());
 	}
 	
 	@ExceptionHandler({Exception.class, RuntimeException.class})

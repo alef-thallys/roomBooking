@@ -133,7 +133,7 @@ public class ReservationControllerTest {
 		void shouldReturnBadRequestIfIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(get(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -173,7 +173,7 @@ public class ReservationControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 		
 		@Test
@@ -238,7 +238,7 @@ public class ReservationControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(reservationUpdateRequestDTO)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 		
 		@ParameterizedTest(name = "should return 400 when update request is invalid: {0}")
@@ -249,7 +249,7 @@ public class ReservationControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -284,7 +284,7 @@ public class ReservationControllerTest {
 		void shouldReturnBadRequestIfIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 }

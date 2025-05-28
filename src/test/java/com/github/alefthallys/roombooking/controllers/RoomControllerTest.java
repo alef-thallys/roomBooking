@@ -124,7 +124,7 @@ class RoomControllerTest {
 		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(get(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -162,7 +162,7 @@ class RoomControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 		
 		@Test
@@ -224,7 +224,7 @@ class RoomControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -257,7 +257,7 @@ class RoomControllerTest {
 		void shouldReturnBadRequestWhenIdIsInvalid(String invalidId) throws Exception {
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", invalidId))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 }

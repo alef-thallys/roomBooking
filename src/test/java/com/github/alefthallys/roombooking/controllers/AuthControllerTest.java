@@ -2,6 +2,7 @@ package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
+import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
@@ -74,6 +75,7 @@ class AuthControllerTest {
 	private LoginRequestDTO loginRequestDTO;
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
+	private RefreshTokenRequestDTO refreshTokenRequestDTO;
 	private String accessToken;
 	private String refreshToken;
 	
@@ -82,6 +84,7 @@ class AuthControllerTest {
 		loginRequestDTO = UserTestBuilder.anUser().buildLoginRequestDTO();
 		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
 		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
+		refreshTokenRequestDTO = new RefreshTokenRequestDTO("my-refresh-token");
 		
 		accessToken = "my-jwt-access-token";
 		refreshToken = "my-jwt-refresh-token";
@@ -142,7 +145,7 @@ class AuthControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -182,7 +185,7 @@ class AuthControllerTest {
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(invalidDto)))
 					.andExpect(status().isBadRequest())
-					.andExpect(jsonPath("$.message").value("Validation failed"));
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 		
 		@Test
@@ -217,8 +220,8 @@ class AuthControllerTest {
 			when(jwtTokenProvider.generateRefreshToken(any(Authentication.class))).thenReturn("new-refresh-token");
 			
 			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
-							.contentType(MediaType.TEXT_PLAIN)
-							.content(refreshToken))
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(new RefreshTokenRequestDTO(refreshToken))))
 					.andExpect(status().isOk())
 					.andExpect(jsonPath("$.token").value("new-access-token"))
 					.andExpect(jsonPath("$.refreshToken").value("new-refresh-token"));
@@ -228,20 +231,31 @@ class AuthControllerTest {
 		@DisplayName("should return 401 when refresh token is invalid")
 		void shouldReturnUnauthorizedWhenRefreshTokenIsInvalid() throws Exception {
 			String invalidRefreshToken = "invalid-refresh-token";
+			
 			doThrow(new InvalidJwtException("Invalid refresh token")).when(jwtTokenProvider).validateRefreshToken(invalidRefreshToken);
 			
 			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
-							.contentType(MediaType.TEXT_PLAIN)
-							.content(invalidRefreshToken))
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(new RefreshTokenRequestDTO(invalidRefreshToken))))
 					.andExpect(status().isUnauthorized())
 					.andExpect(jsonPath("$.message").value("Invalid refresh token"));
 		}
 		
 		@Test
-		@DisplayName("should return 400 when refresh token is missing")
-		void shouldReturnBadRequestWhenRefreshTokenIsMissing() throws Exception {
+		@DisplayName("should return 400 when refresh token field is null")
+		void shouldReturnBadRequestWhenRefreshTokenFieldIsNull() throws Exception {
 			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
-							.contentType(MediaType.TEXT_PLAIN)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(new RefreshTokenRequestDTO(null))))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
+		}
+		
+		@Test
+		@DisplayName("should return 400 when refresh token request body is missing or malformed")
+		void shouldReturnBadRequestWhenRefreshTokenRequestBodyIsMissingOrMalformed() throws Exception {
+			mockMvc.perform(post(URL_PREFIX + "/refresh-token")
+							.contentType(MediaType.APPLICATION_JSON)
 							.content(""))
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));

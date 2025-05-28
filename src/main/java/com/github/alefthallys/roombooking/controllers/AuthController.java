@@ -2,7 +2,7 @@ package com.github.alefthallys.roombooking.controllers;
 
 import com.github.alefthallys.roombooking.dtos.JwtResponseDTO;
 import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDto;
+import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
@@ -60,7 +60,7 @@ public class AuthController {
 	}
 	
 	@PostMapping("/refresh-token")
-	public ResponseEntity<JwtResponseDTO> refreshToken(@RequestBody RefreshTokenRequestDto request) {
+	public ResponseEntity<JwtResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenRequestDTO request) {
 		String refreshToken = request.refreshToken();
 		
 		try {
@@ -75,7 +75,7 @@ public class AuthController {
 			
 			return ResponseEntity.ok(new JwtResponseDTO(newAccessToken, newRefreshToken));
 		} catch (InvalidJwtException e) {
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token inválido", e);
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token", e);
 		}
 	}
 }
