@@ -8,11 +8,15 @@ import com.github.alefthallys.roombooking.exceptions.EntityUserNotFoundException
 import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
+import com.github.alefthallys.roombooking.testBuilders.UserTestBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,37 +47,22 @@ class UserServiceTest {
 	private User user;
 	private UserRequestDTO userRequestDTO;
 	private UserUpdateRequestDTO userUpdateRequestDTO;
+	private UserResponseDTO userResponseDTO;
 	
 	@BeforeEach
 	void setUp() {
-		user = new User();
-		user.setId(1L);
-		user.setName("John Doe");
-		user.setEmail("john@gmail.com");
-		user.setPassword("password");
-		user.setPhone("123456789");
-		user.setRole(User.Role.ROLE_USER);
-		
-		userRequestDTO = new UserRequestDTO(
-				"John Doe",
-				"john@gmail.com",
-				"123456789",
-				"password"
-		);
-		
-		userUpdateRequestDTO = new UserUpdateRequestDTO(
-				"John Doe",
-				"123456789",
-				"password"
-		);
+		user = UserTestBuilder.anUser().build();
+		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
+		userUpdateRequestDTO = UserTestBuilder.anUser().buildUpdateRequestDTO();
+		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
 	}
 	
-	private void assertEqualsResponseDTO(User user, UserResponseDTO userResponseDTO) {
-		assertEquals(user.getId(), userResponseDTO.id());
-		assertEquals(user.getName(), userResponseDTO.name());
-		assertEquals(user.getEmail(), userResponseDTO.email());
-		assertEquals(user.getPhone(), userResponseDTO.phone());
-		assertEquals(user.getRole(), userResponseDTO.role());
+	private void assertEqualsResponseDTO(User expectedUser, UserResponseDTO actualResponseDTO) {
+		assertEquals(expectedUser.getId(), actualResponseDTO.id());
+		assertEquals(expectedUser.getName(), actualResponseDTO.name());
+		assertEquals(expectedUser.getEmail(), actualResponseDTO.email());
+		assertEquals(expectedUser.getPhone(), actualResponseDTO.phone());
+		assertEquals(expectedUser.getRole(), actualResponseDTO.role());
 	}
 	
 	@Nested
@@ -85,6 +74,7 @@ class UserServiceTest {
 		void shouldReturnAListOfUsers() {
 			when(userRepository.findAll()).thenReturn(List.of(user));
 			List<UserResponseDTO> userResponseDTOList = userService.findAll();
+			assertEquals(1, userResponseDTOList.size());
 			assertEqualsResponseDTO(user, userResponseDTOList.get(0));
 		}
 		
@@ -116,10 +106,13 @@ class UserServiceTest {
 			assertThrows(EntityUserNotFoundException.class, () -> userService.findById(1L));
 		}
 		
-		@Test
-		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
-		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
-			assertThrows(EntityUserNotFoundException.class, () -> userService.findById(null));
+		@ParameterizedTest(name = "Should throw IllegalArgumentException when user id is invalid: {0}")
+		@NullSource
+		@ValueSource(longs = {0L, -1L})
+		@DisplayName("Should throw IllegalArgumentException when user id is invalid")
+		void shouldThrowIllegalArgumentExceptionWhenUserIdIsInvalid(Long invalidId) {
+			assertThrows(IllegalArgumentException.class, () -> userService.findById(invalidId));
+			verify(userRepository, never()).findById(anyLong());
 		}
 	}
 	
@@ -131,10 +124,14 @@ class UserServiceTest {
 		@DisplayName("Should create a user")
 		void shouldCreateAUser() {
 			when(userRepository.existsByEmail(userRequestDTO.email())).thenReturn(false);
-			when(userRepository.save(any(User.class))).thenReturn(user);
 			when(passwordEncoder.encode(userRequestDTO.password())).thenReturn("encodedPassword");
+			when(userRepository.save(any(User.class))).thenReturn(user);
+			
 			UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
+			
 			assertEqualsResponseDTO(user, userResponseDTO);
+			verify(passwordEncoder, times(1)).encode(userRequestDTO.password());
+			verify(userRepository, times(1)).save(any(User.class));
 		}
 		
 		@Test
@@ -142,6 +139,8 @@ class UserServiceTest {
 		void shouldThrowExceptionWhenUserAlreadyExists() {
 			when(userRepository.existsByEmail(userRequestDTO.email())).thenReturn(true);
 			assertThrows(EntityUserAlreadyExistsException.class, () -> userService.create(userRequestDTO));
+			verify(passwordEncoder, never()).encode(anyString());
+			verify(userRepository, never()).save(any(User.class));
 		}
 	}
 	
@@ -155,13 +154,24 @@ class UserServiceTest {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 			doNothing().when(authService).validateUserOwnership(user);
 			when(passwordEncoder.encode(userUpdateRequestDTO.password())).thenReturn("encodedPassword");
-			when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+			when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+				User userToSave = invocation.getArgument(0);
+				userToSave.setName(userUpdateRequestDTO.name());
+				userToSave.setPhone(userUpdateRequestDTO.phone());
+				userToSave.setPassword("encodedPassword");
+				return userToSave;
+			});
 			
-			UserResponseDTO userResponseDTO = userService.update(1L, userUpdateRequestDTO);
-			assertEquals(user.getId(), userResponseDTO.id());
-			assertEquals(userUpdateRequestDTO.name(), userResponseDTO.name());
-			assertEquals(user.getEmail(), userResponseDTO.email());
-			assertEquals(userUpdateRequestDTO.phone(), userResponseDTO.phone());
+			UserResponseDTO result = userService.update(1L, userUpdateRequestDTO);
+			
+			assertEquals(user.getId(), result.id());
+			assertEquals(userUpdateRequestDTO.name(), result.name());
+			assertEquals(user.getEmail(), result.email());
+			assertEquals(userUpdateRequestDTO.phone(), result.phone());
+			
+			verify(authService, times(1)).validateUserOwnership(user);
+			verify(passwordEncoder, times(1)).encode(userUpdateRequestDTO.password());
+			verify(userRepository, times(1)).save(any(User.class));
 		}
 		
 		@Test
@@ -170,6 +180,7 @@ class UserServiceTest {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(user);
 			assertThrows(ForbiddenException.class, () -> userService.update(1L, userUpdateRequestDTO));
+			verify(userRepository, never()).save(any(User.class));
 		}
 		
 		@Test
@@ -177,12 +188,17 @@ class UserServiceTest {
 		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
 			when(userRepository.findById(1L)).thenReturn(Optional.empty());
 			assertThrows(EntityUserNotFoundException.class, () -> userService.update(1L, userUpdateRequestDTO));
+			verify(authService, never()).validateUserOwnership(any(User.class));
+			verify(userRepository, never()).save(any(User.class));
 		}
 		
-		@Test
-		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
-		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
-			assertThrows(EntityUserNotFoundException.class, () -> userService.update(null, userUpdateRequestDTO));
+		@ParameterizedTest(name = "Should throw IllegalArgumentException when user id is invalid: {0}")
+		@NullSource
+		@ValueSource(longs = {0L, -1L})
+		@DisplayName("Should throw IllegalArgumentException when user id is invalid")
+		void shouldThrowIllegalArgumentExceptionWhenUserIdIsInvalid(Long invalidId) {
+			assertThrows(IllegalArgumentException.class, () -> userService.findById(invalidId));
+			verify(userRepository, never()).findById(anyLong());
 		}
 	}
 	
@@ -195,9 +211,12 @@ class UserServiceTest {
 		void shouldDeleteAUser() {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 			doNothing().when(authService).validateUserOwnership(user);
+			doNothing().when(userRepository).delete(any(User.class));
 			
 			userService.delete(1L);
-			verify(userRepository).delete(user);
+			
+			verify(authService, times(1)).validateUserOwnership(user);
+			verify(userRepository, times(1)).delete(user);
 		}
 		
 		@Test
@@ -206,6 +225,7 @@ class UserServiceTest {
 			when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(user);
 			assertThrows(ForbiddenException.class, () -> userService.delete(1L));
+			verify(userRepository, never()).delete(any(User.class));
 		}
 		
 		@Test
@@ -213,12 +233,17 @@ class UserServiceTest {
 		void shouldThrowEntityUserNotFoundExceptionWhenUserIsNotFound() {
 			when(userRepository.findById(1L)).thenReturn(Optional.empty());
 			assertThrows(EntityUserNotFoundException.class, () -> userService.delete(1L));
+			verify(authService, never()).validateUserOwnership(any(User.class));
+			verify(userRepository, never()).delete(any(User.class));
 		}
 		
-		@Test
-		@DisplayName("Should throw EntityUserNotFoundException when user id is null")
-		void shouldThrowEntityUserNotFoundExceptionWhenUserIdIsNull() {
-			assertThrows(EntityUserNotFoundException.class, () -> userService.delete(null));
+		@ParameterizedTest(name = "Should throw IllegalArgumentException when user id is invalid: {0}")
+		@NullSource
+		@ValueSource(longs = {0L, -1L})
+		@DisplayName("Should throw IllegalArgumentException when user id is invalid")
+		void shouldThrowIllegalArgumentExceptionWhenUserIdIsInvalid(Long invalidId) {
+			assertThrows(IllegalArgumentException.class, () -> userService.findById(invalidId));
+			verify(userRepository, never()).findById(anyLong());
 		}
 	}
 }

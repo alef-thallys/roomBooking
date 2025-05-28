@@ -97,9 +97,9 @@ class RoomServiceTest {
 		}
 		
 		@Test
-		@DisplayName("should throw exception when room id is null")
-		void shouldThrowExceptionWhenRoomIdIsNull() {
-			assertThrows(EntityRoomNotFoundException.class, () -> roomService.findById(null));
+		@DisplayName("should throw IllegalArgumentException when room id is null")
+		void shouldThrowIllegalArgumentExceptionWhenRoomIdIsNull() {
+			assertThrows(IllegalArgumentException.class, () -> roomService.findById(null));
 		}
 	}
 	
@@ -144,9 +144,9 @@ class RoomServiceTest {
 		}
 		
 		@Test
-		@DisplayName("should throw exception when room id is null")
-		void shouldThrowExceptionWhenRoomIdIsNull() {
-			assertThrows(EntityRoomNotFoundException.class, () -> roomService.update(null, roomRequestDTO));
+		@DisplayName("should throw IllegalArgumentException when room id is null")
+		void shouldThrowIllegalArgumentExceptionWhenRoomIdIsNull() {
+			assertThrows(IllegalArgumentException.class, () -> roomService.update(null, roomRequestDTO));
 		}
 	}
 	
@@ -171,9 +171,9 @@ class RoomServiceTest {
 		}
 		
 		@Test
-		@DisplayName("should throw exception when room id is null")
-		void shouldThrowExceptionWhenRoomIdIsNull() {
-			assertThrows(EntityRoomNotFoundException.class, () -> roomService.delete(null));
+		@DisplayName("should throw IllegalArgumentException when room id is null")
+		void shouldThrowIllegalArgumentExceptionWhenRoomIdIsNull() {
+			assertThrows(IllegalArgumentException.class, () -> roomService.delete(null));
 		}
 	}
 }

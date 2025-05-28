@@ -8,8 +8,10 @@ import com.github.alefthallys.roombooking.mappers.RoomMapper;
 import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -20,42 +22,64 @@ public class RoomService {
 		this.roomRepository = roomRepository;
 	}
 	
-	public List<RoomResponseDTO> findAll() {
-		return roomRepository.findAll().stream()
-				.map(RoomMapper::toDto)
-				.toList();
+	private static void validateIdOrThrowException(Long id) {
+		if (id == null || id <= 0) {
+			throw new IllegalArgumentException("Invalid user ID: " + id);
+		}
 	}
 	
+	@Transactional(readOnly = true)
+	public List<RoomResponseDTO> findAll() {
+		return roomRepository.findAll()
+				.stream()
+				.map(RoomMapper::toDto)
+				.collect(Collectors.toList());
+	}
+	
+	@Transactional(readOnly = true)
 	public RoomResponseDTO findById(Long id) {
-		Room room = roomRepository.findById(id).orElseThrow(() -> new EntityRoomNotFoundException(id));
+		validateIdOrThrowException(id);
+		return roomRepository.findById(id)
+				.map(RoomMapper::toDto)
+				.orElseThrow(() -> new EntityRoomNotFoundException(id));
+	}
+	
+	@Transactional
+	public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
+		if (roomRepository.existsByName(roomRequestDTO.name())) {
+			throw new EntityRoomAlreadyExistsException(roomRequestDTO.name());
+		}
+		Room room = RoomMapper.toEntity(roomRequestDTO);
+		room = roomRepository.save(room);
 		return RoomMapper.toDto(room);
 	}
 	
-	public RoomResponseDTO create(RoomRequestDTO room) {
-		if (roomRepository.existsByName(room.name())) {
-			throw new EntityRoomAlreadyExistsException(room.name());
+	@Transactional
+	public RoomResponseDTO update(Long id, RoomRequestDTO roomRequestDTO) {
+		validateIdOrThrowException(id);
+		
+		Room room = roomRepository.findById(id)
+				.orElseThrow(() -> new EntityRoomNotFoundException(id));
+		
+		room.setName(roomRequestDTO.name());
+		room.setDescription(roomRequestDTO.description());
+		room.setCapacity(roomRequestDTO.capacity());
+		room.setAvailable(roomRequestDTO.available());
+		room.setLocation(roomRequestDTO.location());
+		
+		if (roomRepository.existsByName(room.getName())) {
+			throw new EntityRoomAlreadyExistsException(room.getName());
 		}
 		
-		Room roomToSave = RoomMapper.toEntity(room);
-		return RoomMapper.toDto(roomRepository.save(roomToSave));
+		room = roomRepository.save(room);
+		return RoomMapper.toDto(room);
 	}
 	
-	public RoomResponseDTO update(Long id, RoomRequestDTO room) {
-		Room roomToUpdate = roomRepository.findById(id).orElseThrow(
-				() -> new EntityRoomNotFoundException(id));
-		
-		roomToUpdate.setName(room.name());
-		roomToUpdate.setDescription(room.description());
-		roomToUpdate.setCapacity(room.capacity());
-		roomToUpdate.setAvailable(room.available());
-		roomToUpdate.setLocation(room.location());
-		
-		return RoomMapper.toDto(roomRepository.save(roomToUpdate));
-	}
-	
+	@Transactional
 	public void delete(Long id) {
-		Room roomById = roomRepository.findById(id).orElseThrow(
-				() -> new EntityRoomNotFoundException(id));
-		roomRepository.delete(roomById);
+		validateIdOrThrowException(id);
+		Room room = roomRepository.findById(id)
+				.orElseThrow(() -> new EntityRoomNotFoundException(id));
+		roomRepository.delete(room);
 	}
 }
