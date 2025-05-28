@@ -54,14 +54,12 @@ public class AuthController {
 	}
 	
 	@GetMapping("/me")
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<UserDetails> getCurrentUser() {
 		UserDetails authentication = jwtTokenProvider.getAuthentication();
 		return ResponseEntity.ok(authentication);
 	}
 	
 	@PostMapping("/refresh-token")
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<JwtResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenRequestDTO request) {
 		String refreshToken = request.refreshToken();
 		

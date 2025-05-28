@@ -23,33 +23,28 @@ public class ReservationController {
 	}
 	
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<List<ReservationResponseDTO>> findAll() {
 		return ResponseEntity.ok(reservationService.findAll());
 	}
 	
 	@GetMapping("/{id}")
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<ReservationResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(reservationService.findById(id));
 	}
 	
 	@PostMapping
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<ReservationResponseDTO> create(@RequestBody @Valid ReservationRequestDTO reservationDTO) {
 		ReservationResponseDTO createdReservation = reservationService.create(reservationDTO);
 		return new ResponseEntity<>(createdReservation, HttpStatus.CREATED);
 	}
 	
 	@PutMapping("/{id}")
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<ReservationResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ReservationUpdateRequestDTO reservationDTO) {
 		ReservationResponseDTO updatedReservation = reservationService.update(id, reservationDTO);
 		return ResponseEntity.ok(updatedReservation);
 	}
 	
 	@DeleteMapping("/{id}")
-	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<Void> delete(@PathVariable Long id) {
 		reservationService.delete(id);
 		return ResponseEntity.noContent().build();
