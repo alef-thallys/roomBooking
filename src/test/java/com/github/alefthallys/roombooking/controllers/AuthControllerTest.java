@@ -75,7 +75,6 @@ class AuthControllerTest {
 	private LoginRequestDTO loginRequestDTO;
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
-	private RefreshTokenRequestDTO refreshTokenRequestDTO;
 	private String accessToken;
 	private String refreshToken;
 	
@@ -84,7 +83,6 @@ class AuthControllerTest {
 		loginRequestDTO = UserTestBuilder.anUser().buildLoginRequestDTO();
 		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
 		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
-		refreshTokenRequestDTO = new RefreshTokenRequestDTO("my-refresh-token");
 		
 		accessToken = "my-jwt-access-token";
 		refreshToken = "my-jwt-refresh-token";

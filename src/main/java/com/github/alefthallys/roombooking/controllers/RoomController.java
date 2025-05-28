@@ -6,6 +6,7 @@ import com.github.alefthallys.roombooking.services.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,26 +22,31 @@ public class RoomController {
 	}
 	
 	@GetMapping
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<List<RoomResponseDTO>> findAll() {
 		return ResponseEntity.ok(roomService.findAll());
 	}
 	
 	@GetMapping("/{id}")
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<RoomResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(roomService.findById(id));
 	}
 	
 	@PostMapping
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 	public ResponseEntity<RoomResponseDTO> create(@RequestBody @Valid RoomRequestDTO room) {
 		return new ResponseEntity<>(roomService.create(room), HttpStatus.CREATED);
 	}
 	
 	@PutMapping("/{id}")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 	public ResponseEntity<RoomResponseDTO> update(@PathVariable Long id, @RequestBody @Valid RoomRequestDTO room) {
 		return ResponseEntity.ok(roomService.update(id, room));
 	}
 	
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAnyRole('ROLE_ADMIN')")
 	public ResponseEntity<Void> delete(@PathVariable Long id) {
 		roomService.delete(id);
 		return ResponseEntity.noContent().build();

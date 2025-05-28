@@ -6,13 +6,13 @@ import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
-import com.github.alefthallys.roombooking.repositories.UserRepository;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,23 +28,23 @@ public class AuthController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final UserService userService;
 	private final CustomUserDetailsService customUserDetailsService;
-	private final UserRepository userRepository;
 	
-	public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserService userService, CustomUserDetailsService customUserDetailsService, UserRepository userRepository) {
+	public AuthController(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, UserService userService, CustomUserDetailsService customUserDetailsService) {
 		this.authenticationManager = authenticationManager;
 		this.jwtTokenProvider = jwtTokenProvider;
 		this.userService = userService;
 		this.customUserDetailsService = customUserDetailsService;
-		this.userRepository = userRepository;
 	}
 	
 	@PostMapping("/register")
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<UserResponseDTO> register(@RequestBody @Valid UserRequestDTO userRequestDTO) {
 		UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
 		return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
 	}
 	
 	@PostMapping("/login")
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<JwtResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequest) {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password()));
@@ -54,12 +54,14 @@ public class AuthController {
 	}
 	
 	@GetMapping("/me")
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<UserDetails> getCurrentUser() {
 		UserDetails authentication = jwtTokenProvider.getAuthentication();
 		return ResponseEntity.ok(authentication);
 	}
 	
 	@PostMapping("/refresh-token")
+	@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
 	public ResponseEntity<JwtResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenRequestDTO request) {
 		String refreshToken = request.refreshToken();
 		

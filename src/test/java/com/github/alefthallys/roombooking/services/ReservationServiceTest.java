@@ -3,6 +3,7 @@ package com.github.alefthallys.roombooking.services;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
 import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.models.Reservation;
@@ -195,6 +196,16 @@ class ReservationServiceTest {
 			assertThrows(IllegalArgumentException.class, () -> reservationService.findById(invalidId));
 			verify(userRepository, never()).findById(anyLong());
 		}
+		
+		@Test
+		@DisplayName("Should throw ForbiddenException when user does not own the reservation")
+		void shouldThrowForbiddenExceptionWhenUserDoesNotOwnTheReservation() {
+			when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(any(User.class));
+			
+			assertThrows(ForbiddenException.class, () -> reservationService.update(1L, reservationUpdateRequestDTO));
+			verify(reservationRepository, never()).save(any(Reservation.class));
+		}
 	}
 	
 	@Nested
@@ -230,6 +241,16 @@ class ReservationServiceTest {
 		void shouldThrowIllegalArgumentExceptionWhenUserIdIsInvalid(Long invalidId) {
 			assertThrows(IllegalArgumentException.class, () -> reservationService.findById(invalidId));
 			verify(userRepository, never()).findById(anyLong());
+		}
+		
+		@Test
+		@DisplayName("Should throw ForbiddenException when user does not own the reservation")
+		void shouldThrowForbiddenExceptionWhenUserDoesNotOwnTheReservation() {
+			when(reservationRepository.findById(1L)).thenReturn(Optional.of(reservation));
+			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(any(User.class));
+			
+			assertThrows(ForbiddenException.class, () -> reservationService.update(1L, reservationUpdateRequestDTO));
+			verify(reservationRepository, never()).save(any(Reservation.class));
 		}
 	}
 }

@@ -18,12 +18,11 @@ public class ReservationDatesValidator implements ConstraintValidator<ValidReser
 		if (value instanceof ReservationUpdateRequestDTO dto) {
 			return isValidDates(dto.startDate(), dto.endDate());
 		}
-		return true;
+		return false;
 	}
 	
 	private boolean isValidDates(LocalDateTime start, LocalDateTime end) {
 		if (start == null || end == null) return true;
 		return start.isBefore(end);
 	}
-	
 }

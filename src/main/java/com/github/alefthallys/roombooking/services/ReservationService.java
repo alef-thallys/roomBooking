@@ -11,7 +11,6 @@ import com.github.alefthallys.roombooking.models.Room;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.ReservationRepository;
 import com.github.alefthallys.roombooking.repositories.RoomRepository;
-import com.github.alefthallys.roombooking.repositories.UserRepository;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,14 +25,13 @@ public class ReservationService {
 	private final RoomRepository roomRepository;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final AuthService authService;
-	private final UserRepository userRepository;
 	
-	public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, JwtTokenProvider jwtTokenProvider, AuthService authService, UserRepository userRepository) {
+	
+	public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, JwtTokenProvider jwtTokenProvider, AuthService authService) {
 		this.reservationRepository = reservationRepository;
 		this.roomRepository = roomRepository;
 		this.jwtTokenProvider = jwtTokenProvider;
 		this.authService = authService;
-		this.userRepository = userRepository;
 	}
 	
 	private static void validateIdOrThrowException(Long id) {
@@ -60,9 +58,7 @@ public class ReservationService {
 	
 	@Transactional
 	public ReservationResponseDTO create(ReservationRequestDTO reservationDTO) {
-		if (!roomRepository.existsById(reservationDTO.roomId())) {
-			throw new EntityRoomNotFoundException(reservationDTO.roomId());
-		}
+		validateRoomExists(reservationDTO.roomId());
 		
 		User currentUser = jwtTokenProvider.getCurrentUser();
 		Room roomById = roomRepository.findById(reservationDTO.roomId()).orElseThrow(() -> new EntityRoomNotFoundException(reservationDTO.roomId()));
@@ -106,5 +102,11 @@ public class ReservationService {
 		
 		authService.validateUserOwnership(reservationById.getUser());
 		reservationRepository.delete(reservationById);
+	}
+	
+	private void validateRoomExists(Long roomId) {
+		if (!roomRepository.existsById(roomId)) {
+			throw new EntityRoomNotFoundException(roomId);
+		}
 	}
 }
