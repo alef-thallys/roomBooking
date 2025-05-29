@@ -120,6 +120,11 @@ public class GlobalExceptionHandler {
 		return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request body format or missing content", request.getRequestURI());
 	}
 	
+	@ExceptionHandler(EntityReservationConflictException.class)
+	public ResponseEntity<ErrorResponseDTO> handleEntityReservationConflict(EntityReservationConflictException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
+	}
+	
 	@ExceptionHandler(ResponseStatusException.class)
 	public ResponseEntity<ErrorResponseDTO> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
 		return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getReason(), request.getRequestURI());

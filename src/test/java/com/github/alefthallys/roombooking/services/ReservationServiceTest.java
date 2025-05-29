@@ -3,6 +3,7 @@ package com.github.alefthallys.roombooking.services;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityReservationConflictException;
 import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
 import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
@@ -28,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +64,7 @@ class ReservationServiceTest {
 	private ReservationRequestDTO reservationRequestDTO;
 	private ReservationUpdateRequestDTO reservationUpdateRequestDTO;
 	private ReservationResponseDTO reservationResponseDTO;
+	private Reservation existingConflictingReservation;
 	private User user;
 	private Room room;
 	
@@ -73,6 +76,14 @@ class ReservationServiceTest {
 		reservationRequestDTO = ReservationTestBuilder.aReservation().withRoom(room).buildRequestDTO();
 		reservationUpdateRequestDTO = ReservationTestBuilder.aReservation().buildUpdateRequestDTO();
 		reservationResponseDTO = ReservationTestBuilder.aReservation().withUser(user).withRoom(room).buildResponseDTO();
+		
+		existingConflictingReservation = ReservationTestBuilder.aReservation()
+				.withId(2L)
+				.withRoom(room)
+				.withUser(UserTestBuilder.anUser().withId(99L).build())
+				.withStartDate(LocalDateTime.now().plusDays(1).plusHours(1))
+				.withEndDate(LocalDateTime.now().plusDays(2).minusHours(1))
+				.build();
 	}
 	
 	private void assertEqualsResponseDTO(Reservation expectedReservation, ReservationResponseDTO actualResponseDTO) {
@@ -159,6 +170,20 @@ class ReservationServiceTest {
 			assertThrows(EntityRoomNotFoundException.class, () -> reservationService.create(reservationRequestDTO));
 			verify(reservationRepository, never()).save(any(Reservation.class));
 		}
+		
+		@Test
+		@DisplayName("Should throw EntityReservationConflictException when there is a time conflict")
+		void shouldThrowEntityReservationConflictExceptionWhenTimeConflict() {
+			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(true);
+			when(jwtTokenProvider.getCurrentUser()).thenReturn(user);
+			when(roomRepository.findById(reservationRequestDTO.roomId())).thenReturn(Optional.of(room));
+			when(reservationRepository.findByRoomIdAndStartDateBeforeAndEndDateAfter(
+					anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(List.of(existingConflictingReservation));
+			
+			assertThrows(EntityReservationConflictException.class, () -> reservationService.create(reservationRequestDTO));
+			verify(reservationRepository, never()).save(any(Reservation.class));
+		}
 	}
 	
 	@Nested
@@ -204,6 +229,20 @@ class ReservationServiceTest {
 			doThrow(new ForbiddenException()).when(authService).validateUserOwnership(any(User.class));
 			
 			assertThrows(ForbiddenException.class, () -> reservationService.update(1L, reservationUpdateRequestDTO));
+			verify(reservationRepository, never()).save(any(Reservation.class));
+		}
+		
+		@Test
+		@DisplayName("Should throw EntityReservationConflictException when there is a time conflict")
+		void shouldThrowEntityReservationConflictExceptionWhenTimeConflict() {
+			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(true);
+			when(jwtTokenProvider.getCurrentUser()).thenReturn(user);
+			when(roomRepository.findById(reservationRequestDTO.roomId())).thenReturn(Optional.of(room));
+			when(reservationRepository.findByRoomIdAndStartDateBeforeAndEndDateAfter(
+					anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
+					.thenReturn(List.of(existingConflictingReservation));
+			
+			assertThrows(EntityReservationConflictException.class, () -> reservationService.create(reservationRequestDTO));
 			verify(reservationRepository, never()).save(any(Reservation.class));
 		}
 	}

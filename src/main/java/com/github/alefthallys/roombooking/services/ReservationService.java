@@ -3,6 +3,7 @@ package com.github.alefthallys.roombooking.services;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
+import com.github.alefthallys.roombooking.exceptions.EntityReservationConflictException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
 import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.mappers.ReservationMapper;
@@ -15,6 +16,7 @@ import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,6 +74,8 @@ public class ReservationService {
 		User currentUser = jwtTokenProvider.getCurrentUser();
 		Room roomById = roomRepository.findById(reservationDTO.roomId()).orElseThrow(() -> new EntityRoomNotFoundException(reservationDTO.roomId()));
 		
+		checkReservationConflict(reservationDTO.roomId(), reservationDTO.startDate(), reservationDTO.endDate(), null);
+		
 		Reservation reservationToSave = new Reservation();
 		reservationToSave.setRoom(roomById);
 		reservationToSave.setUser(currentUser);
@@ -89,6 +93,8 @@ public class ReservationService {
 				() -> new EntityReservationNotFoundException(id));
 		
 		authService.validateUserOwnership(reservationById.getUser());
+		
+		checkReservationConflict(reservationById.getRoom().getId(), reservationDTO.startDate(), reservationDTO.endDate(), id);
 		
 		if (reservationDTO.startDate() != null) {
 			reservationById.setStartDate(reservationDTO.startDate());
@@ -116,6 +122,24 @@ public class ReservationService {
 	private void validateRoomExists(Long roomId) {
 		if (!roomRepository.existsById(roomId)) {
 			throw new EntityRoomNotFoundException(roomId);
+		}
+	}
+	
+	@Transactional(readOnly = true)
+	public void checkReservationConflict(Long roomId, LocalDateTime newStartDate, LocalDateTime newEndDate, Long currentReservationId) {
+		List<Reservation> existingReservations = reservationRepository.findByRoomIdAndStartDateBeforeAndEndDateAfter(
+				roomId, newEndDate, newStartDate);
+		
+		for (Reservation existingReservation : existingReservations) {
+			// Skip the current reservation if it's an update operation
+			if (currentReservationId != null && existingReservation.getId().equals(currentReservationId)) {
+				continue;
+			}
+			throw new EntityReservationConflictException(
+					existingReservation.getStartDate(),
+					existingReservation.getEndDate(),
+					existingReservation.getRoom().getName()
+			);
 		}
 	}
 }
