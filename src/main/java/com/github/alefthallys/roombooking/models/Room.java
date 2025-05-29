@@ -16,7 +16,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "rooms")
-public class Room implements Serializable {
+public class Room extends Auditable<String> implements Serializable {
 	
 	@Serial
 	private static final long serialVersionUID = 1L;

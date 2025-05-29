@@ -18,7 +18,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User implements Serializable {
+public class User extends Auditable<String> implements Serializable {
 	
 	@Serial
 	private static final long serialVersionUID = 1L;

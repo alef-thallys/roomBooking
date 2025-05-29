@@ -17,7 +17,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Entity
 @Table(name = "reservations")
-public class Reservation implements Serializable {
+public class Reservation extends Auditable<String> implements Serializable {
 	
 	@Serial
 	private static final long serialVersionUID = 1L;
