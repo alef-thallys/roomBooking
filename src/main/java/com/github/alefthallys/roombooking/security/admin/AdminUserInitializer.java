@@ -21,7 +21,7 @@ public class AdminUserInitializer {
 				admin.setEmail(adminEmail);
 				admin.setPhone("12997665045");
 				admin.setPassword(encoder.encode("admin123"));
-				admin.setRole(User.Role.ROLE_ADMIN);
+				admin.setRole(User.Role.ADMIN);
 				
 				userRepository.save(admin);
 			}

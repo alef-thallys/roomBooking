@@ -7,7 +7,6 @@ import com.github.alefthallys.roombooking.services.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +29,11 @@ public class ReservationController {
 	@GetMapping("/{id}")
 	public ResponseEntity<ReservationResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(reservationService.findById(id));
+	}
+	
+	@GetMapping("/me")
+	public ResponseEntity<List<ReservationResponseDTO>> getMyReservations() {
+		return ResponseEntity.ok(reservationService.findByUser());
 	}
 	
 	@PostMapping

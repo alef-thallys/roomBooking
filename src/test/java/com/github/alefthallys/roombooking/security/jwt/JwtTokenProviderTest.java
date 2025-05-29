@@ -135,7 +135,7 @@ class JwtTokenProviderTest {
 					.parseClaimsJws(token)
 					.getBody();
 			
-			assertEquals("ROLE_USER", claims.get("role"));
+			assertEquals("USER", claims.get("role"));
 		}
 		
 		@Test
@@ -159,7 +159,7 @@ class JwtTokenProviderTest {
 					.parseClaimsJws(token)
 					.getBody();
 			
-			assertEquals("ROLE_ADMIN", claims.get("role"));
+			assertEquals("ADMIN", claims.get("role"));
 		}
 		
 		@Test
@@ -219,7 +219,7 @@ class JwtTokenProviderTest {
 			mockUser.setEmail("userTest@gmail.com");
 			mockUser.setId(1L);
 			mockUser.setName("Test User");
-			mockUser.setRole(com.github.alefthallys.roombooking.models.User.Role.ROLE_USER);
+			mockUser.setRole(com.github.alefthallys.roombooking.models.User.Role.USER);
 			
 			UserDetails authenticatedUserDetails = org.springframework.security.core.userdetails.User.withUsername("userTest@gmail.com")
 					.password("passwordTest")

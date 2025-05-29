@@ -38,17 +38,14 @@ class AuthServiceTest {
 		ownerUser = UserTestBuilder.anUser().withEmail("owner@example.com").withId(1L).build();
 		otherUser = UserTestBuilder.anUser().withEmail("other@example.com").withId(2L).build();
 		
-		String ownerRoleNameWithoutPrefix = ownerUser.getRole().name().substring("ROLE_".length());
-		String otherRoleNameWithoutPrefix = otherUser.getRole().name().substring("ROLE_".length());
-		
 		ownerUserDetails = org.springframework.security.core.userdetails.User.withUsername(ownerUser.getEmail())
 				.password(ownerUser.getPassword())
-				.roles(ownerRoleNameWithoutPrefix)
+				.roles(ownerUser.getRole().toString())
 				.build();
 		
 		otherUserDetails = org.springframework.security.core.userdetails.User.withUsername(otherUser.getEmail())
 				.password(otherUser.getPassword())
-				.roles(otherRoleNameWithoutPrefix)
+				.roles(otherUser.getRole().toString())
 				.build();
 	}
 	

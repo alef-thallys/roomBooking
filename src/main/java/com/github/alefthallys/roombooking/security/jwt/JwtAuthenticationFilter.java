@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
 import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.security.SecurityConstants;
 import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Instant;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -27,52 +29,71 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		this.customUserDetailsService = customUserDetailsService;
 	}
 	
-	private static void handleException(HttpServletRequest request, HttpServletResponse response, InvalidJwtException ex) throws IOException {
-		response.setStatus(HttpStatus.UNAUTHORIZED.value());
-		response.setContentType("application/json");
-		response.getWriter().write("""
-				{
-				  "timestamp": "%s",
-				  "status": 401,
-				  "message": "%s",
-				              "path": "%s"
-				}
-				""".formatted(java.time.Instant.now(), ex.getMessage(), request.getRequestURI()));
-	}
-	
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request,
+	                                HttpServletResponse response,
+	                                FilterChain filterChain) throws ServletException, IOException {
 		
-		if (request.getRequestURI().equals("/api/v1/auth/login")
-				|| request.getRequestURI().equals("/api/v1/auth/register")
-				|| request.getRequestURI().equals("/api/v1/auth/refresh-token")) {
+		String requestURI = request.getRequestURI();
+		
+		if (SecurityConstants.PUBLIC_ENDPOINTS.contains(requestURI)) {
 			filterChain.doFilter(request, response);
 			return;
 		}
 		
 		try {
-			String token = getTokenFromRequest(request);
+			String token = extractToken(request);
 			jwtTokenProvider.validateToken(token);
+			
 			String username = jwtTokenProvider.getUsernameFromToken(token);
+			
 			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 				UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-				var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+				
+				var auth = new UsernamePasswordAuthenticationToken(
+						userDetails,
+						null,
+						userDetails.getAuthorities()
+				);
 				
 				auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(auth);
 			}
+			
 		} catch (InvalidJwtException ex) {
-			handleException(request, response, ex);
+			respondUnauthorized(response, request, ex);
 			return;
 		}
+		
 		filterChain.doFilter(request, response);
 	}
 	
-	private String getTokenFromRequest(HttpServletRequest request) throws InvalidJwtException {
-		String bearer = request.getHeader("Authorization");
-		if (bearer == null) {
-			throw new InvalidJwtException("Authorization header is missing");
+	private String extractToken(HttpServletRequest request) {
+		String header = request.getHeader("Authorization");
+		
+		if (header == null || !header.startsWith("Bearer ")) {
+			throw new InvalidJwtException("Missing or invalid Authorization header");
 		}
-		return bearer.startsWith("Bearer ") ? bearer.substring(7) : null;
+		
+		return header.substring(7);
+	}
+	
+	private void respondUnauthorized(HttpServletResponse response,
+	                                 HttpServletRequest request,
+	                                 InvalidJwtException ex) throws IOException {
+		
+		response.setStatus(HttpStatus.UNAUTHORIZED.value());
+		response.setContentType("application/json");
+		
+		String body = """
+				{
+				  "timestamp": "%s",
+				  "status": 401,
+				  "message": "%s",
+				  "path": "%s"
+				}
+				""".formatted(Instant.now(), ex.getMessage(), request.getRequestURI());
+		
+		response.getWriter().write(body);
 	}
 }

@@ -9,7 +9,6 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -63,9 +62,9 @@ public class JwtTokenProvider {
 		return Jwts.builder()
 				.setSubject(email)
 				.claim("role", userDetails.getAuthorities().stream()
-						.map(GrantedAuthority::getAuthority)
+						.map(auth -> auth.getAuthority().replace("ROLE_", "")) // remove prefixo
 						.findFirst()
-						.orElse("ROLE_USER"))
+						.orElse("USER"))
 				.setIssuer(jwtProperties.getIssuer())
 				.setAudience(jwtProperties.getAudience())
 				.setIssuedAt(now)

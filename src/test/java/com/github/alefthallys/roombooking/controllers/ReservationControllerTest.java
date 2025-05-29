@@ -138,6 +138,27 @@ public class ReservationControllerTest {
 	}
 	
 	@Nested
+	@DisplayName("GET " + URL_PREFIX + "/me")
+	class FindMyReservations {
+		
+		@Test
+		@DisplayName("should return a list of reservations for the authenticated user")
+		void shouldReturnMyReservations() throws Exception {
+			when(reservationService.findByUser()).thenReturn(List.of(reservationResponseDTO));
+			
+			mockMvc.perform(get(URL_PREFIX + "/me"))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$[0].id").value(reservationResponseDTO.id()))
+					.andExpect(jsonPath("$[0].startDate").value(reservationResponseDTO.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$[0].endDate").value(reservationResponseDTO.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$[0].user.id").value(reservationResponseDTO.user().id()))
+					.andExpect(jsonPath("$[0].user.name").value(reservationResponseDTO.user().name()))
+					.andExpect(jsonPath("$[0].room.id").value(reservationResponseDTO.room().id()))
+					.andExpect(jsonPath("$[0].room.name").value(reservationResponseDTO.room().name()));
+		}
+	}
+	
+	@Nested
 	@DisplayName("POST " + URL_PREFIX)
 	class CreateReservation {
 		

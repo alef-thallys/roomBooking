@@ -26,13 +26,10 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
-				.authorizeHttpRequests(
-						authz -> authz
-								.requestMatchers("/api/v1/auth/login").permitAll()
-								.requestMatchers("/api/v1/auth/register").permitAll()
-								.requestMatchers("/api/v1/auth/refresh-token").permitAll()
-								.anyRequest().authenticated()
-				)
+				.authorizeHttpRequests(authz -> {
+					SecurityConstants.PUBLIC_ENDPOINTS.forEach(endpoint -> authz.requestMatchers(endpoint).permitAll());
+					authz.anyRequest().authenticated();
+				})
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		return http.build();

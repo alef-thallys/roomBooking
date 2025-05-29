@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -95,6 +96,33 @@ class AuthControllerTest {
 				.andExpect(jsonPath("$.email").value(userResponseDTO.email()))
 				.andExpect(jsonPath("$.phone").value(userResponseDTO.phone()))
 				.andExpect(jsonPath("$.role").value(userResponseDTO.role().name()));
+	}
+	
+	@Nested
+	@DisplayName("GET " + URL_PREFIX + "/me")
+	class GetCurrentUser {
+		
+		@Test
+		@DisplayName("should return current user details")
+		void shouldReturnCurrentUserDetails() throws Exception {
+			UserDetails userDetails = UserTestBuilder.anUser().buildUserDetails();
+			when(jwtTokenProvider.getAuthentication()).thenReturn(userDetails);
+			
+			mockMvc.perform(get(URL_PREFIX + "/me"))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.username").value(userDetails.getUsername()))
+					.andExpect(jsonPath("$.authorities").isArray());
+		}
+		
+		@Test
+		@DisplayName("should return 401 when user is not authenticated")
+		void shouldReturnUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
+			when(jwtTokenProvider.getAuthentication()).thenThrow(new InvalidJwtException("Invalid token"));
+			
+			mockMvc.perform(get(URL_PREFIX + "/me"))
+					.andExpect(status().isUnauthorized())
+					.andExpect(jsonPath("$.message").value("Invalid token"));
+		}
 	}
 	
 	@Nested

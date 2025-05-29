@@ -5,6 +5,7 @@ import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.models.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserTestBuilder {
 	
@@ -13,7 +14,7 @@ public class UserTestBuilder {
 	private String email = "john@gmail.com";
 	private String password = "password";
 	private String phone = "123456789";
-	private User.Role role = User.Role.ROLE_USER;
+	private User.Role role = User.Role.USER;
 	
 	public static UserTestBuilder anUser() {
 		return new UserTestBuilder();
@@ -74,5 +75,13 @@ public class UserTestBuilder {
 	
 	public LoginRequestDTO buildLoginRequestDTO() {
 		return new LoginRequestDTO(email, password);
+	}
+	
+	public UserDetails buildUserDetails() {
+		return org.springframework.security.core.userdetails.User.builder()
+				.username(email)
+				.password(password)
+				.roles(role.name())
+				.build();
 	}
 }

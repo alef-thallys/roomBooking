@@ -56,6 +56,15 @@ public class ReservationService {
 				.orElseThrow(() -> new EntityReservationNotFoundException(id));
 	}
 	
+	@Transactional(readOnly = true)
+	public List<ReservationResponseDTO> findByUser() {
+		User currentUser = jwtTokenProvider.getCurrentUser();
+		return reservationRepository.findByUser(currentUser)
+				.stream()
+				.map(ReservationMapper::toDto)
+				.collect(Collectors.toList());
+	}
+	
 	@Transactional
 	public ReservationResponseDTO create(ReservationRequestDTO reservationDTO) {
 		validateRoomExists(reservationDTO.roomId());
