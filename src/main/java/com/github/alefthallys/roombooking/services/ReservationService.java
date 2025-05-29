@@ -1,5 +1,6 @@
 package com.github.alefthallys.roombooking.services;
 
+import com.github.alefthallys.roombooking.dtos.Email.ReservationConfirmationEmailDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
@@ -27,13 +28,15 @@ public class ReservationService {
 	private final RoomRepository roomRepository;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final AuthService authService;
+	private final EmailNotificationService emailNotificationService;
 	
 	
-	public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, JwtTokenProvider jwtTokenProvider, AuthService authService) {
+	public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, JwtTokenProvider jwtTokenProvider, AuthService authService, EmailNotificationService emailNotificationService) {
 		this.reservationRepository = reservationRepository;
 		this.roomRepository = roomRepository;
 		this.jwtTokenProvider = jwtTokenProvider;
 		this.authService = authService;
+		this.emailNotificationService = emailNotificationService;
 	}
 	
 	private static void validateIdOrThrowException(Long id) {
@@ -82,7 +85,21 @@ public class ReservationService {
 		reservationToSave.setStartDate(reservationDTO.startDate());
 		reservationToSave.setEndDate(reservationDTO.endDate());
 		
-		return ReservationMapper.toDto(reservationRepository.save(reservationToSave));
+		Reservation savedReservation = reservationRepository.save(reservationToSave);
+		ReservationResponseDTO responseDTO = ReservationMapper.toDto(savedReservation);
+		
+		emailNotificationService.sendReservationConfirmationEmail(
+				new ReservationConfirmationEmailDTO(
+						currentUser.getEmail(),
+						currentUser.getName(),
+						roomById.getName(),
+						savedReservation.getStartDate(),
+						savedReservation.getEndDate(),
+						savedReservation.getId()
+				)
+		);
+		
+		return responseDTO;
 	}
 	
 	@Transactional

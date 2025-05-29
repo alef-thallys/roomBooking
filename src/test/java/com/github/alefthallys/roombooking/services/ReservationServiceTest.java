@@ -1,5 +1,6 @@
 package com.github.alefthallys.roombooking.services;
 
+import com.github.alefthallys.roombooking.dtos.Email.ReservationConfirmationEmailDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
@@ -59,6 +60,9 @@ class ReservationServiceTest {
 	
 	@Mock
 	private UserRepository userRepository;
+	
+	@Mock
+	private EmailNotificationService emailNotificationService;
 	
 	private Reservation reservation;
 	private ReservationRequestDTO reservationRequestDTO;
@@ -155,12 +159,15 @@ class ReservationServiceTest {
 			when(roomRepository.existsById(reservationRequestDTO.roomId())).thenReturn(true);
 			when(jwtTokenProvider.getCurrentUser()).thenReturn(user);
 			when(roomRepository.findById(reservationRequestDTO.roomId())).thenReturn(Optional.of(room));
+			when(reservationRepository.findByRoomIdAndStartDateBeforeAndEndDateAfter(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of());
 			when(reservationRepository.save(any(Reservation.class))).thenReturn(reservation);
+			doNothing().when(emailNotificationService).sendReservationConfirmationEmail(any(ReservationConfirmationEmailDTO.class));
 			
 			ReservationResponseDTO result = reservationService.create(reservationRequestDTO);
 			
 			assertEqualsResponseDTO(reservation, result);
 			verify(reservationRepository, times(1)).save(any(Reservation.class));
+			verify(emailNotificationService, times(1)).sendReservationConfirmationEmail(any(ReservationConfirmationEmailDTO.class));
 		}
 		
 		@Test
