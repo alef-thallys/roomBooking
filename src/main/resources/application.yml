@@ -28,6 +28,20 @@ spring:
       username: guest
       password: guest
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,beans,env,loggers,httptrace,threaddump
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      access: read_only
+    httptrace:
+      enabled: true
+      buffer-size: 100
+
 logging:
   level:
     root: warn

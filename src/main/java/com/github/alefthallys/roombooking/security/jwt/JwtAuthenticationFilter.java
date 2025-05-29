@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	
 	private final JwtTokenProvider jwtTokenProvider;
 	private final CustomUserDetailsService customUserDetailsService;
+	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 	
 	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
 		this.jwtTokenProvider = jwtTokenProvider;
@@ -36,7 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		
 		String requestURI = request.getRequestURI();
 		
-		if (SecurityConstants.PUBLIC_ENDPOINTS.contains(requestURI)) {
+		boolean isPublicEndpoint = SecurityConstants.PUBLIC_ENDPOINTS.stream()
+				.anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
+		
+		if (isPublicEndpoint) {
 			filterChain.doFilter(request, response);
 			return;
 		}
