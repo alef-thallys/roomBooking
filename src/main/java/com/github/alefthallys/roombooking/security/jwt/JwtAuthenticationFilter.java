@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
 import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
+import com.github.alefthallys.roombooking.repositories.UserRepository;
 import com.github.alefthallys.roombooking.security.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.security.SecurityConstants;
 import jakarta.servlet.FilterChain;
@@ -25,10 +26,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final CustomUserDetailsService customUserDetailsService;
 	private final AntPathMatcher pathMatcher = new AntPathMatcher();
+	private final UserRepository userRepository;
 	
-	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService, UserRepository userRepository) {
 		this.jwtTokenProvider = jwtTokenProvider;
 		this.customUserDetailsService = customUserDetailsService;
+		this.userRepository = userRepository;
 	}
 	
 	@Override
@@ -51,6 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			jwtTokenProvider.validateToken(token);
 			
 			String username = jwtTokenProvider.getUsernameFromToken(token);
+			
+			if (!userRepository.existsByEmail(username)) {
+				throw new InvalidJwtException("Invalid JWT: User does not exist");
+			}
 			
 			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 				UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
