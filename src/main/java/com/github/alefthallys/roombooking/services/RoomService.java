@@ -46,9 +46,7 @@ public class RoomService {
 	
 	@Transactional
 	public RoomResponseDTO create(RoomRequestDTO roomRequestDTO) {
-		if (roomRepository.existsByName(roomRequestDTO.name())) {
-			throw new EntityRoomAlreadyExistsException(roomRequestDTO.name());
-		}
+		verifyIfRoomExist(roomRequestDTO);
 		Room room = RoomMapper.toEntity(roomRequestDTO);
 		room = roomRepository.save(room);
 		return RoomMapper.toDto(room);
@@ -57,6 +55,7 @@ public class RoomService {
 	@Transactional
 	public RoomResponseDTO update(Long id, RoomRequestDTO roomRequestDTO) {
 		validateIdOrThrowException(id);
+		verifyIfRoomExist(roomRequestDTO);
 		
 		Room room = roomRepository.findById(id)
 				.orElseThrow(() -> new EntityRoomNotFoundException(id));
@@ -65,10 +64,6 @@ public class RoomService {
 		room.setDescription(roomRequestDTO.description());
 		room.setCapacity(roomRequestDTO.capacity());
 		room.setLocation(roomRequestDTO.location());
-		
-		if (roomRepository.existsByName(room.getName())) {
-			throw new EntityRoomAlreadyExistsException(room.getName());
-		}
 		
 		room = roomRepository.save(room);
 		return RoomMapper.toDto(room);
@@ -80,5 +75,11 @@ public class RoomService {
 		Room room = roomRepository.findById(id)
 				.orElseThrow(() -> new EntityRoomNotFoundException(id));
 		roomRepository.delete(room);
+	}
+	
+	private void verifyIfRoomExist(RoomRequestDTO roomRequestDTO) {
+		if (roomRepository.existsByName(roomRequestDTO.name())) {
+			throw new EntityRoomAlreadyExistsException(roomRequestDTO.name());
+		}
 	}
 }
