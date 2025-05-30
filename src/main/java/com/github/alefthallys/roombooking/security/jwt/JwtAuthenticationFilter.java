@@ -1,8 +1,8 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
-import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
+import com.github.alefthallys.roombooking.security.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.security.SecurityConstants;
-import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

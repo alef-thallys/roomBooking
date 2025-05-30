@@ -1,16 +1,17 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.LoginRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.RefreshTokenRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
-import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
 import com.github.alefthallys.roombooking.exceptions.User.EntityUserAlreadyExistsException;
+import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
+import com.github.alefthallys.roombooking.security.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.security.jwt.JwtAuthenticationFilter;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
-import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.services.UserService;
 import com.github.alefthallys.roombooking.testBuilders.UserTestBuilder;
 import com.github.alefthallys.roombooking.testUtils.TestConstants;
@@ -27,7 +28,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -103,25 +103,29 @@ class AuthControllerTest {
 	class GetCurrentUser {
 		
 		@Test
-		@DisplayName("should return current user details")
+		@DisplayName("should return current user")
 		void shouldReturnCurrentUserDetails() throws Exception {
-			UserDetails userDetails = UserTestBuilder.anUser().buildUserDetails();
-			when(jwtTokenProvider.getAuthentication()).thenReturn(userDetails);
+			User user = UserTestBuilder.anUser().build();
+			
+			when(jwtTokenProvider.getCurrentUser()).thenReturn(user);
 			
 			mockMvc.perform(get(URL_PREFIX + "/me"))
 					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.username").value(userDetails.getUsername()))
-					.andExpect(jsonPath("$.authorities").isArray());
+					.andExpect(jsonPath("$.id").value(user.getId()))
+					.andExpect(jsonPath("$.name").value(user.getName()))
+					.andExpect(jsonPath("$.email").value(user.getEmail()))
+					.andExpect(jsonPath("$.phone").value(user.getPhone()))
+					.andExpect(jsonPath("$.role").value(user.getRole().name()));
 		}
 		
 		@Test
 		@DisplayName("should return 401 when user is not authenticated")
 		void shouldReturnUnauthorizedWhenUserIsNotAuthenticated() throws Exception {
-			when(jwtTokenProvider.getAuthentication()).thenThrow(new InvalidJwtException("Invalid token"));
+			when(jwtTokenProvider.getCurrentUser()).thenThrow(new InvalidJwtException("No authenticated user found"));
 			
 			mockMvc.perform(get(URL_PREFIX + "/me"))
 					.andExpect(status().isUnauthorized())
-					.andExpect(jsonPath("$.message").value("Invalid token"));
+					.andExpect(jsonPath("$.message").value("No authenticated user found"));
 		}
 	}
 	
@@ -238,7 +242,6 @@ class AuthControllerTest {
 					.password("encodedPassword")
 					.roles("USER")
 					.build();
-			Authentication authMock = new UsernamePasswordAuthenticationToken(userDetailsMock, null, userDetailsMock.getAuthorities());
 			
 			when(jwtTokenProvider.getUsernameFromRefreshToken(refreshToken)).thenReturn(userEmail);
 			when(customUserDetailsService.loadUserByUsername(userEmail)).thenReturn(userDetailsMock);

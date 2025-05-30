@@ -2,7 +2,6 @@ package com.github.alefthallys.roombooking.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +36,6 @@ public class User extends Auditable<String> implements Serializable {
 	@Column(nullable = false)
 	private String password;
 	
-	@Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number")
 	@Column(nullable = false)
 	private String phone;
 	

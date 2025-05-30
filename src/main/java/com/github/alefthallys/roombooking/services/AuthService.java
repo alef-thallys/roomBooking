@@ -1,7 +1,7 @@
 package com.github.alefthallys.roombooking.services;
 
-import com.github.alefthallys.roombooking.exceptions.ForbiddenException;
-import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.exceptions.Auth.ForbiddenException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import org.springframework.security.core.userdetails.UserDetails;

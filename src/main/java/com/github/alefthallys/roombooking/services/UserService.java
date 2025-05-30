@@ -20,13 +20,10 @@ public class UserService {
 	
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final AuthService authService;
 	
-	
-	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthService authService) {
+	public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
-		this.authService = authService;
 	}
 	
 	private static void validateIdOrThrowException(Long id) {
@@ -68,8 +65,6 @@ public class UserService {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new EntityUserNotFoundException(id));
 		
-		authService.validateUserOwnership(user);
-		
 		user.setName(userUpdateRequestDTO.name());
 		user.setPhone(userUpdateRequestDTO.phone());
 		user.setPassword(passwordEncoder.encode(userUpdateRequestDTO.password()));
@@ -83,7 +78,6 @@ public class UserService {
 		validateIdOrThrowException(id);
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new EntityUserNotFoundException(id));
-		authService.validateUserOwnership(user);
 		userRepository.delete(user);
 	}
 }

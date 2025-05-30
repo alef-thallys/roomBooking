@@ -75,6 +75,19 @@ class UserControllerTest {
 				.andExpect(jsonPath("$.role").value(userResponseDTO.role().name()));
 	}
 	
+	private void assertUserResponseDTOList(ResultActions resultActions, List<UserResponseDTO> responses) throws Exception {
+		resultActions.andExpect(jsonPath("$.length()").value(responses.size()));
+		for (int i = 0; i < responses.size(); i++) {
+			UserResponseDTO response = responses.get(i);
+			resultActions
+					.andExpect(jsonPath("$[" + i + "].id").value(response.id()))
+					.andExpect(jsonPath("$[" + i + "].name").value(response.name()))
+					.andExpect(jsonPath("$[" + i + "].email").value(response.email()))
+					.andExpect(jsonPath("$[" + i + "].phone").value(response.phone()))
+					.andExpect(jsonPath("$[" + i + "].role").value(response.role().name()));
+		}
+	}
+	
 	@Nested
 	@DisplayName("GET " + URL_PREFIX)
 	class FindAllUsers {
@@ -82,15 +95,12 @@ class UserControllerTest {
 		@Test
 		@DisplayName("should return all users")
 		void shouldReturnAllUsers() throws Exception {
-			when(userService.findAll()).thenReturn(List.of(userResponseDTO));
+			List<UserResponseDTO> responseList = List.of(userResponseDTO);
+			when(userService.findAll()).thenReturn(responseList);
 			
-			mockMvc.perform(get(URL_PREFIX))
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$[0].id").value(userResponseDTO.id()))
-					.andExpect(jsonPath("$[0].name").value(userResponseDTO.name()))
-					.andExpect(jsonPath("$[0].email").value(userResponseDTO.email()))
-					.andExpect(jsonPath("$[0].phone").value(userResponseDTO.phone()))
-					.andExpect(jsonPath("$[0].role").value(userResponseDTO.role().name()));
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX))
+					.andExpect(status().isOk());
+			assertUserResponseDTOList(resultActions, responseList);
 		}
 	}
 	
@@ -184,6 +194,13 @@ class UserControllerTest {
 	@DisplayName("PUT " + URL_PREFIX + "/{id}")
 	class UpdateUser {
 		
+		private static Stream<Arguments> invalidUserUpdateRequestDTOs() {
+			return Stream.of(
+					Arguments.of(UserTestBuilder.anUser().withName(null).buildUpdateRequestDTO()),
+					Arguments.of(UserTestBuilder.anUser().withPhone("").buildUpdateRequestDTO())
+			);
+		}
+		
 		@Test
 		@DisplayName("should update user")
 		void shouldUpdateUser() throws Exception {
@@ -210,6 +227,17 @@ class UserControllerTest {
 					.andExpect(jsonPath("$.message").value("User not found with id: " + 1L));
 		}
 		
+		@ParameterizedTest(name = "should return 400 when request body is invalid for update: {0}")
+		@MethodSource("invalidUserUpdateRequestDTOs")
+		@DisplayName("should return 400 when request body is invalid for update")
+		void shouldReturnBadRequestWhenUpdateUserWithInvalidData(UserUpdateRequestDTO invalidDto) throws Exception {
+			mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(invalidDto)))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
+		}
+		
 		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
 		@ValueSource(strings = {"invalid-id", "abc"})
 		@DisplayName("should return 400 when id is invalid")
@@ -233,6 +261,8 @@ class UserControllerTest {
 			
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", 1L))
 					.andExpect(status().isNoContent());
+			
+			verify(userService, times(1)).delete(1L);
 		}
 		
 		@Test

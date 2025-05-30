@@ -1,13 +1,15 @@
 package com.github.alefthallys.roombooking.controllers;
 
-import com.github.alefthallys.roombooking.dtos.JwtResponseDTO;
-import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
-import com.github.alefthallys.roombooking.dtos.RefreshTokenRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.JwtResponseDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.LoginRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.RefreshTokenRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
-import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
+import com.github.alefthallys.roombooking.mappers.UserMapper;
+import com.github.alefthallys.roombooking.models.User;
+import com.github.alefthallys.roombooking.security.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
-import com.github.alefthallys.roombooking.security.services.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,12 @@ public class AuthController {
 		this.customUserDetailsService = customUserDetailsService;
 	}
 	
+	@GetMapping("/me")
+	public ResponseEntity<UserResponseDTO> getCurrentUser() {
+		User currentUser = jwtTokenProvider.getCurrentUser();
+		return ResponseEntity.ok(UserMapper.toDto(currentUser));
+	}
+	
 	@PostMapping("/register")
 	public ResponseEntity<UserResponseDTO> register(@RequestBody @Valid UserRequestDTO userRequestDTO) {
 		UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
@@ -48,12 +56,6 @@ public class AuthController {
 		String token = jwtTokenProvider.generateToken(authentication);
 		String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 		return ResponseEntity.ok(new JwtResponseDTO(token, refreshToken));
-	}
-	
-	@GetMapping("/me")
-	public ResponseEntity<UserDetails> getCurrentUser() {
-		UserDetails authentication = jwtTokenProvider.getAuthentication();
-		return ResponseEntity.ok(authentication);
 	}
 	
 	@PostMapping("/refresh-token")

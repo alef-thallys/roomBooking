@@ -2,6 +2,8 @@ package com.github.alefthallys.roombooking.exceptions;
 
 import com.github.alefthallys.roombooking.dtos.ErrorResponseDTO;
 import com.github.alefthallys.roombooking.dtos.FieldErrorDTO;
+import com.github.alefthallys.roombooking.exceptions.Auth.ForbiddenException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationAlreadyExistsException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
 import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomAlreadyExistsException;

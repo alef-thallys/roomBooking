@@ -1,6 +1,6 @@
 package com.github.alefthallys.roombooking.security.jwt;
 
-import com.github.alefthallys.roombooking.exceptions.InvalidJwtException;
+import com.github.alefthallys.roombooking.exceptions.Auth.InvalidJwtException;
 import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.repositories.UserRepository;
 import io.jsonwebtoken.Jwts;

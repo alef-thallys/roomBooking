@@ -30,7 +30,6 @@ public class ReservationService {
 	private final AuthService authService;
 	private final EmailNotificationService emailNotificationService;
 	
-	
 	public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, JwtTokenProvider jwtTokenProvider, AuthService authService, EmailNotificationService emailNotificationService) {
 		this.reservationRepository = reservationRepository;
 		this.roomRepository = roomRepository;
@@ -54,6 +53,15 @@ public class ReservationService {
 	}
 	
 	@Transactional(readOnly = true)
+	public List<ReservationResponseDTO> findByUser() {
+		User currentUser = jwtTokenProvider.getCurrentUser();
+		return reservationRepository.findByUser(currentUser)
+				.stream()
+				.map(ReservationMapper::toDto)
+				.collect(Collectors.toList());
+	}
+	
+	@Transactional(readOnly = true)
 	public ReservationResponseDTO findById(Long id) {
 		validateIdOrThrowException(id);
 		return reservationRepository.findById(id)
@@ -62,12 +70,12 @@ public class ReservationService {
 	}
 	
 	@Transactional(readOnly = true)
-	public List<ReservationResponseDTO> findByUser() {
-		User currentUser = jwtTokenProvider.getCurrentUser();
-		return reservationRepository.findByUser(currentUser)
-				.stream()
-				.map(ReservationMapper::toDto)
-				.collect(Collectors.toList());
+	public ReservationResponseDTO findByIdForUser(Long id) {
+		validateIdOrThrowException(id);
+		Long userId = jwtTokenProvider.getCurrentUser().getId();
+		Reservation reservationById = reservationRepository.findByIdForUser(id, userId)
+				.orElseThrow(() -> new EntityReservationNotFoundException(id));
+		return ReservationMapper.toDto(reservationById);
 	}
 	
 	@Transactional
@@ -148,7 +156,6 @@ public class ReservationService {
 				roomId, newEndDate, newStartDate);
 		
 		for (Reservation existingReservation : existingReservations) {
-			// Skip the current reservation if it's an update operation
 			if (currentReservationId != null && existingReservation.getId().equals(currentReservationId)) {
 				continue;
 			}

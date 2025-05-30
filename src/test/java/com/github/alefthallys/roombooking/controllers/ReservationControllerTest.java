@@ -84,6 +84,20 @@ public class ReservationControllerTest {
 				.andExpect(jsonPath("$.room.name").value(response.room().name()));
 	}
 	
+	private void assertReservationResponseDTOList(ResultActions resultActions, List<ReservationResponseDTO> responses) throws Exception {
+		for (int i = 0; i < responses.size(); i++) {
+			ReservationResponseDTO response = responses.get(i);
+			resultActions
+					.andExpect(jsonPath("$[" + i + "].id").value(response.id()))
+					.andExpect(jsonPath("$[" + i + "].startDate").value(response.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$[" + i + "].endDate").value(response.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$[" + i + "].user.id").value(response.user().id()))
+					.andExpect(jsonPath("$[" + i + "].user.name").value(response.user().name()))
+					.andExpect(jsonPath("$[" + i + "].room.id").value(response.room().id()))
+					.andExpect(jsonPath("$[" + i + "].room.name").value(response.room().name()));
+		}
+	}
+	
 	@Nested
 	@DisplayName("GET " + URL_PREFIX)
 	class FindAllReservations {
@@ -91,17 +105,13 @@ public class ReservationControllerTest {
 		@Test
 		@DisplayName("should return a list of reservations")
 		void shouldReturnListOfReservations() throws Exception {
-			when(reservationService.findAll()).thenReturn(List.of(reservationResponseDTO));
+			List<ReservationResponseDTO> responseList = List.of(reservationResponseDTO);
+			when(reservationService.findAll()).thenReturn(responseList);
 			
-			mockMvc.perform(get(URL_PREFIX))
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$[0].id").value(reservationResponseDTO.id()))
-					.andExpect(jsonPath("$[0].startDate").value(reservationResponseDTO.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[0].endDate").value(reservationResponseDTO.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[0].user.id").value(reservationResponseDTO.user().id()))
-					.andExpect(jsonPath("$[0].user.name").value(reservationResponseDTO.user().name()))
-					.andExpect(jsonPath("$[0].room.id").value(reservationResponseDTO.room().id()))
-					.andExpect(jsonPath("$[0].room.name").value(reservationResponseDTO.room().name()));
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX))
+					.andExpect(status().isOk());
+			
+			assertReservationResponseDTOList(resultActions, responseList);
 		}
 	}
 	
@@ -114,7 +124,9 @@ public class ReservationControllerTest {
 		void shouldReturnReservationById() throws Exception {
 			when(reservationService.findById(1L)).thenReturn(reservationResponseDTO);
 			
-			assertReservationResponseDTO(mockMvc.perform(get(URL_PREFIX + "/{id}", 1L)), reservationResponseDTO);
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/{id}", 1L))
+					.andExpect(status().isOk());
+			assertReservationResponseDTO(resultActions, reservationResponseDTO);
 		}
 		
 		@Test
@@ -144,17 +156,13 @@ public class ReservationControllerTest {
 		@Test
 		@DisplayName("should return a list of reservations for the authenticated user")
 		void shouldReturnMyReservations() throws Exception {
-			when(reservationService.findByUser()).thenReturn(List.of(reservationResponseDTO));
+			List<ReservationResponseDTO> responseList = List.of(reservationResponseDTO);
+			when(reservationService.findByUser()).thenReturn(responseList);
 			
-			mockMvc.perform(get(URL_PREFIX + "/me"))
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$[0].id").value(reservationResponseDTO.id()))
-					.andExpect(jsonPath("$[0].startDate").value(reservationResponseDTO.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[0].endDate").value(reservationResponseDTO.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[0].user.id").value(reservationResponseDTO.user().id()))
-					.andExpect(jsonPath("$[0].user.name").value(reservationResponseDTO.user().name()))
-					.andExpect(jsonPath("$[0].room.id").value(reservationResponseDTO.room().id()))
-					.andExpect(jsonPath("$[0].room.name").value(reservationResponseDTO.room().name()));
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/me"))
+					.andExpect(status().isOk());
+			
+			assertReservationResponseDTOList(resultActions, responseList);
 		}
 	}
 	
@@ -179,11 +187,11 @@ public class ReservationControllerTest {
 		void shouldCreateNewReservation() throws Exception {
 			when(reservationService.create(reservationRequestDTO)).thenReturn(reservationResponseDTO);
 			
-			assertReservationResponseDTO(mockMvc.perform(post(URL_PREFIX)
-									.contentType(MediaType.APPLICATION_JSON)
-									.content(objectMapper.writeValueAsString(reservationRequestDTO)))
-							.andExpect(status().isCreated()),
-					reservationResponseDTO);
+			ResultActions resultActions = mockMvc.perform(post(URL_PREFIX)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(reservationRequestDTO)))
+					.andExpect(status().isCreated());
+			assertReservationResponseDTO(resultActions, reservationResponseDTO);
 		}
 		
 		@ParameterizedTest(name = "should return 400 when reservation request is invalid: {0}")
@@ -230,13 +238,11 @@ public class ReservationControllerTest {
 		void shouldUpdateReservation() throws Exception {
 			when(reservationService.update(1L, reservationUpdateRequestDTO)).thenReturn(reservationResponseDTO);
 			
-			assertReservationResponseDTO(
-					mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
-									.contentType(MediaType.APPLICATION_JSON)
-									.content(objectMapper.writeValueAsString(reservationUpdateRequestDTO)))
-							.andExpect(status().isOk()),
-					reservationResponseDTO
-			);
+			ResultActions resultActions = mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(reservationUpdateRequestDTO)))
+					.andExpect(status().isOk());
+			assertReservationResponseDTO(resultActions, reservationResponseDTO);
 		}
 		
 		@Test

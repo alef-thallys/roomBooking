@@ -2,6 +2,7 @@ package com.github.alefthallys.roombooking.dtos.User;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record UserRequestDTO(
@@ -18,6 +19,7 @@ public record UserRequestDTO(
 		@NotBlank(message = "Password is required")
 		String password,
 		
+		@Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number")
 		@NotBlank(message = "Phone is required")
 		String phone
 ) {

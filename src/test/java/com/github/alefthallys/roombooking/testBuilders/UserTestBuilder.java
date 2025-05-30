@@ -1,6 +1,6 @@
 package com.github.alefthallys.roombooking.testBuilders;
 
-import com.github.alefthallys.roombooking.dtos.LoginRequestDTO;
+import com.github.alefthallys.roombooking.dtos.Auth.LoginRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
@@ -13,7 +13,7 @@ public class UserTestBuilder {
 	private String name = "John Doe";
 	private String email = "john@gmail.com";
 	private String password = "password";
-	private String phone = "123456789";
+	private String phone = "1299994444";
 	private User.Role role = User.Role.USER;
 	
 	public static UserTestBuilder anUser() {

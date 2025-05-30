@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.security.services;
+package com.github.alefthallys.roombooking.security;
 
 import com.github.alefthallys.roombooking.repositories.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

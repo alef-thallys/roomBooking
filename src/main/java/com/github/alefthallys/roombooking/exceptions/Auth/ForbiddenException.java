@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.exceptions;
+package com.github.alefthallys.roombooking.exceptions.Auth;
 
 public class ForbiddenException extends RuntimeException {
 	public ForbiddenException() {

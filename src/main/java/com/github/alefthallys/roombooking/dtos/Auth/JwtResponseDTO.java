@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.dtos;
+package com.github.alefthallys.roombooking.dtos.Auth;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

@@ -29,8 +29,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,6 +73,19 @@ class RoomControllerTest {
 				.andExpect(jsonPath("$.location").value(roomResponseDTO.location()));
 	}
 	
+	private void assertRoomResponseDTOList(ResultActions resultActions, List<RoomResponseDTO> responses) throws Exception {
+		resultActions.andExpect(jsonPath("$.length()").value(responses.size()));
+		for (int i = 0; i < responses.size(); i++) {
+			RoomResponseDTO response = responses.get(i);
+			resultActions
+					.andExpect(jsonPath("$[" + i + "].id").value(response.id()))
+					.andExpect(jsonPath("$[" + i + "].name").value(response.name()))
+					.andExpect(jsonPath("$[" + i + "].description").value(response.description()))
+					.andExpect(jsonPath("$[" + i + "].capacity").value(response.capacity()))
+					.andExpect(jsonPath("$[" + i + "].location").value(response.location()));
+		}
+	}
+	
 	@Nested
 	@DisplayName("GET " + URL_PREFIX)
 	class FindAllRooms {
@@ -81,15 +93,13 @@ class RoomControllerTest {
 		@Test
 		@DisplayName("should return all rooms")
 		void shouldReturnAllRooms() throws Exception {
-			when(roomService.findAll()).thenReturn(List.of(roomResponseDTO));
+			List<RoomResponseDTO> responseList = List.of(roomResponseDTO);
+			when(roomService.findAll()).thenReturn(responseList);
 			
-			mockMvc.perform(get(URL_PREFIX))
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$[0].id").value(roomResponseDTO.id()))
-					.andExpect(jsonPath("$[0].name").value(roomResponseDTO.name()))
-					.andExpect(jsonPath("$[0].description").value(roomResponseDTO.description()))
-					.andExpect(jsonPath("$[0].capacity").value(roomResponseDTO.capacity()))
-					.andExpect(jsonPath("$[0].location").value(roomResponseDTO.location()));
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX))
+					.andExpect(status().isOk());
+			
+			assertRoomResponseDTOList(resultActions, responseList);
 		}
 	}
 	
@@ -226,6 +236,17 @@ class RoomControllerTest {
 					.andExpect(status().isBadRequest())
 					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
+		
+		@ParameterizedTest(name = "should return 400 when id is invalid: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
+		@DisplayName("should return 400 when id is invalid for update")
+		void shouldReturnBadRequestWhenIdIsInvalidForUpdate(String invalidId) throws Exception {
+			mockMvc.perform(put(URL_PREFIX + "/{id}", invalidId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(roomRequestDTO)))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
+		}
 	}
 	
 	@Nested
@@ -235,8 +256,12 @@ class RoomControllerTest {
 		@Test
 		@DisplayName("should delete a room")
 		void shouldDeleteRoom() throws Exception {
+			doNothing().when(roomService).delete(1L);
+			
 			mockMvc.perform(delete(URL_PREFIX + "/{id}", 1L))
 					.andExpect(status().isNoContent());
+			
+			verify(roomService, times(1)).delete(1L);
 		}
 		
 		@Test
