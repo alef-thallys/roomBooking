@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/room_booking
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 87249293a
+
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+
+      JWT_SECRET: dTRwSGUxZ0hZIWRuTThuQXEzVkpAdkx5eFJzI1RwQlpyVzdjWmY5Nm0yQHFYOVdtRlM=
+      JWT_EXPIRATION: 86400000
+      JWT_ISSUER: roomBooking
+      JWT_AUDIENCE: roomBooking
+      JWT_HEADER: Authorization
+      JWT_PREFIX: Bearer
+      JWT_REFRESHSECRET: aDNzSDFsNXBjMnQ4VjQ1ZzVjNjBqZjd3eTNxMjdyOWUxNmQwazQ5Z3cxY2Myc2Q0ZDNlMnMzZnA3YjFzZDNmNGc1NA==
+      JWT_REFRESHEXPIRATION: 604800000
+
+      JAVA_TOOL_OPTIONS: "-XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -XX:NativeMemoryTracking=summary -XX:+AlwaysPreTouch -Djdk.internal.lambda.disableEagerInitialization=true -Djdk.internal.platform.Container.enabled=false"
+    depends_on:
+      - mariadb
+      - rabbitmq
+    networks:
+      - roombooking-network
+
+  mariadb:
+    image: mariadb:10.6
+    environment:
+      MARIADB_ROOT_PASSWORD: 87249293a
+      MARIADB_DATABASE: room_booking
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - roombooking-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - roombooking-network
+
+networks:
+  roombooking-network:
+    driver: bridge
+
+volumes:
+  mariadb_data:
