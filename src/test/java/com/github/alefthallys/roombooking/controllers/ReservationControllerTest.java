@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.alefthallys.roombooking.assemblers.ReservationModelAssembler;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
@@ -23,6 +24,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,10 +33,13 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,10 +66,15 @@ public class ReservationControllerTest {
 	@MockitoBean
 	private ReservationService reservationService;
 	
+	@MockitoBean
+	private ReservationModelAssembler reservationModelAssembler;
+	
 	private ReservationRequestDTO reservationRequestDTO;
 	private ReservationResponseDTO reservationResponseDTO;
 	private ReservationUpdateRequestDTO reservationUpdateRequestDTO;
 	private Reservation mockReservation;
+	private EntityModel<ReservationResponseDTO> reservationEntityModel;
+	private CollectionModel<EntityModel<ReservationResponseDTO>> reservationCollectionModel;
 	
 	@BeforeEach
 	void setUp() {
@@ -71,9 +82,19 @@ public class ReservationControllerTest {
 		reservationUpdateRequestDTO = ReservationTestBuilder.aReservation().buildUpdateRequestDTO();
 		reservationResponseDTO = ReservationTestBuilder.aReservation().buildResponseDTO();
 		mockReservation = ReservationTestBuilder.aReservation().build();
+		
+		reservationEntityModel = EntityModel.of(reservationResponseDTO,
+				linkTo(methodOn(ReservationController.class).findById(reservationResponseDTO.id())).withSelfRel(),
+				linkTo(methodOn(ReservationController.class).update(reservationResponseDTO.id(), null)).withRel("update"),
+				linkTo(methodOn(ReservationController.class).delete(reservationResponseDTO.id())).withRel("delete")
+		);
+		
+		reservationCollectionModel = CollectionModel.of(Collections.singletonList(reservationEntityModel),
+				linkTo(methodOn(ReservationController.class).findAll()).withSelfRel()
+		);
 	}
 	
-	private void assertReservationResponseDTO(ResultActions resultActions, ReservationResponseDTO response) throws Exception {
+	private void assertReservationEntityModel(ResultActions resultActions, ReservationResponseDTO response) throws Exception {
 		resultActions
 				.andExpect(jsonPath("$.id").value(response.id()))
 				.andExpect(jsonPath("$.startDate").value(response.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
@@ -81,37 +102,48 @@ public class ReservationControllerTest {
 				.andExpect(jsonPath("$.user.id").value(response.user().id()))
 				.andExpect(jsonPath("$.user.name").value(response.user().name()))
 				.andExpect(jsonPath("$.room.id").value(response.room().id()))
-				.andExpect(jsonPath("$.room.name").value(response.room().name()));
+				.andExpect(jsonPath("$.room.name").value(response.room().name()))
+				.andExpect(jsonPath("$._links.self.href").exists())
+				.andExpect(jsonPath("$._links.update.href").exists())
+				.andExpect(jsonPath("$._links.delete.href").exists());
 	}
 	
-	private void assertReservationResponseDTOList(ResultActions resultActions, List<ReservationResponseDTO> responses) throws Exception {
+	private void assertReservationCollectionModel(ResultActions resultActions, List<ReservationResponseDTO> responses, String collectionKey) throws Exception {
+		resultActions.andExpect(jsonPath("$._embedded." + collectionKey + ".length()").value(responses.size()));
 		for (int i = 0; i < responses.size(); i++) {
 			ReservationResponseDTO response = responses.get(i);
 			resultActions
-					.andExpect(jsonPath("$[" + i + "].id").value(response.id()))
-					.andExpect(jsonPath("$[" + i + "].startDate").value(response.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[" + i + "].endDate").value(response.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
-					.andExpect(jsonPath("$[" + i + "].user.id").value(response.user().id()))
-					.andExpect(jsonPath("$[" + i + "].user.name").value(response.user().name()))
-					.andExpect(jsonPath("$[" + i + "].room.id").value(response.room().id()))
-					.andExpect(jsonPath("$[" + i + "].room.name").value(response.room().name()));
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].id").value(response.id()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].startDate").value(response.startDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].endDate").value(response.endDate().truncatedTo(ChronoUnit.SECONDS).toString()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].user.id").value(response.user().id()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].user.name").value(response.user().name()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].room.id").value(response.room().id()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "].room.name").value(response.room().name()))
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "]._links.self.href").exists())
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "]._links.update.href").exists())
+					.andExpect(jsonPath("$._embedded." + collectionKey + "[" + i + "]._links.delete.href").exists());
 		}
+		resultActions.andExpect(jsonPath("$._links.self.href").exists());
 	}
+	
 	
 	@Nested
 	@DisplayName("GET " + URL_PREFIX)
 	class FindAllReservations {
 		
 		@Test
-		@DisplayName("should return a list of reservations")
-		void shouldReturnListOfReservations() throws Exception {
+		@DisplayName("should return a list of reservations with HATEOAS links")
+		void shouldReturnListOfReservationsWithHateoasLinks() throws Exception {
 			List<ReservationResponseDTO> responseList = List.of(reservationResponseDTO);
 			when(reservationService.findAll()).thenReturn(responseList);
+			
+			doReturn(reservationCollectionModel).when(reservationModelAssembler).toCollectionModel(responseList);
 			
 			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX))
 					.andExpect(status().isOk());
 			
-			assertReservationResponseDTOList(resultActions, responseList);
+			assertReservationCollectionModel(resultActions, responseList, "reservationResponseDTOList");
 		}
 	}
 	
@@ -120,13 +152,15 @@ public class ReservationControllerTest {
 	class FindReservationById {
 		
 		@Test
-		@DisplayName("should return a reservation by ID")
-		void shouldReturnReservationById() throws Exception {
+		@DisplayName("should return a reservation by ID with HATEOAS links")
+		void shouldReturnReservationByIdWithHateoasLinks() throws Exception {
 			when(reservationService.findById(1L)).thenReturn(reservationResponseDTO);
+			
+			doReturn(reservationEntityModel).when(reservationModelAssembler).toModel(reservationResponseDTO);
 			
 			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/{id}", 1L))
 					.andExpect(status().isOk());
-			assertReservationResponseDTO(resultActions, reservationResponseDTO);
+			assertReservationEntityModel(resultActions, reservationResponseDTO);
 		}
 		
 		@Test
@@ -154,15 +188,56 @@ public class ReservationControllerTest {
 	class FindMyReservations {
 		
 		@Test
-		@DisplayName("should return a list of reservations for the authenticated user")
-		void shouldReturnMyReservations() throws Exception {
+		@DisplayName("should return a list of reservations for the authenticated user with HATEOAS links")
+		void shouldReturnMyReservationsWithHateoasLinks() throws Exception {
 			List<ReservationResponseDTO> responseList = List.of(reservationResponseDTO);
 			when(reservationService.findByUser()).thenReturn(responseList);
+			
+			CollectionModel<EntityModel<ReservationResponseDTO>> myReservationsCollectionModel = CollectionModel.of(Collections.singletonList(reservationEntityModel),
+					linkTo(methodOn(ReservationController.class).getMyReservations()).withSelfRel()
+			);
+			doReturn(myReservationsCollectionModel).when(reservationModelAssembler).toCollectionModel(responseList);
+			
 			
 			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/me"))
 					.andExpect(status().isOk());
 			
-			assertReservationResponseDTOList(resultActions, responseList);
+			assertReservationCollectionModel(resultActions, responseList, "reservationResponseDTOList");
+		}
+	}
+	
+	@Nested
+	@DisplayName("GET " + URL_PREFIX + "/me/{id}")
+	class FindMyReservationById {
+		
+		@Test
+		@DisplayName("should return a reservation by ID for the current user with HATEOAS links")
+		void shouldReturnMyReservationByIdWithHateoasLinks() throws Exception {
+			when(reservationService.findByIdForUser(1L)).thenReturn(reservationResponseDTO);
+			doReturn(reservationEntityModel).when(reservationModelAssembler).toModel(reservationResponseDTO);
+			
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/me/{id}", 1L))
+					.andExpect(status().isOk());
+			assertReservationEntityModel(resultActions, reservationResponseDTO);
+		}
+		
+		@Test
+		@DisplayName("should return 404 when reservation not found for current user")
+		void shouldThrowMethodNotFoundIfReservationNotFoundForUser() throws Exception {
+			when(reservationService.findByIdForUser(1L)).thenThrow(new EntityReservationNotFoundException(1L));
+			
+			mockMvc.perform(get(URL_PREFIX + "/me/{id}", 1L))
+					.andExpect(status().isNotFound())
+					.andExpect(jsonPath("$.message").value("Reservation not found with id: " + 1L));
+		}
+		
+		@ParameterizedTest(name = "should return 400 if ID is invalid for current user: {0}")
+		@ValueSource(strings = {"invalid-id", "abc"})
+		@DisplayName("should return 400 if ID is invalid for current user")
+		void shouldReturnBadRequestIfIdIsInvalidForUser(String invalidId) throws Exception {
+			mockMvc.perform(get(URL_PREFIX + "/me/{id}", invalidId))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.message").value("Invalid request body format or missing content"));
 		}
 	}
 	
@@ -183,15 +258,16 @@ public class ReservationControllerTest {
 		}
 		
 		@Test
-		@DisplayName("should create a new reservation")
-		void shouldCreateNewReservation() throws Exception {
+		@DisplayName("should create a new reservation with HATEOAS links")
+		void shouldCreateNewReservationWithHateoasLinks() throws Exception {
 			when(reservationService.create(reservationRequestDTO)).thenReturn(reservationResponseDTO);
+			doReturn(reservationEntityModel).when(reservationModelAssembler).toModel(reservationResponseDTO);
 			
 			ResultActions resultActions = mockMvc.perform(post(URL_PREFIX)
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(reservationRequestDTO)))
 					.andExpect(status().isCreated());
-			assertReservationResponseDTO(resultActions, reservationResponseDTO);
+			assertReservationEntityModel(resultActions, reservationResponseDTO);
 		}
 		
 		@ParameterizedTest(name = "should return 400 when reservation request is invalid: {0}")
@@ -234,15 +310,16 @@ public class ReservationControllerTest {
 		}
 		
 		@Test
-		@DisplayName("should update reservation")
-		void shouldUpdateReservation() throws Exception {
+		@DisplayName("should update reservation with HATEOAS links")
+		void shouldUpdateReservationWithHateoasLinks() throws Exception {
 			when(reservationService.update(1L, reservationUpdateRequestDTO)).thenReturn(reservationResponseDTO);
+			doReturn(reservationEntityModel).when(reservationModelAssembler).toModel(reservationResponseDTO);
 			
 			ResultActions resultActions = mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
 							.contentType(MediaType.APPLICATION_JSON)
 							.content(objectMapper.writeValueAsString(reservationUpdateRequestDTO)))
 					.andExpect(status().isOk());
-			assertReservationResponseDTO(resultActions, reservationResponseDTO);
+			assertReservationEntityModel(resultActions, reservationResponseDTO);
 		}
 		
 		@Test

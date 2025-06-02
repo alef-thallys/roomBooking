@@ -131,6 +131,12 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- Hateoas -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-hateoas</artifactId>
+        </dependency>
+
         <!-- Spring Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,6 +1,7 @@
 package com.github.alefthallys.roombooking.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.alefthallys.roombooking.assemblers.UserModelAssembler;
 import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
@@ -22,15 +23,20 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -56,51 +62,77 @@ class UserControllerTest {
 	@MockitoBean
 	private UserService userService;
 	
+	@MockitoBean
+	private UserModelAssembler userModelAssembler;
+	
 	private UserRequestDTO userRequestDTO;
 	private UserResponseDTO userResponseDTO;
 	private UserUpdateRequestDTO userUpdateRequestDTO;
+	private EntityModel<UserResponseDTO> userEntityModel;
+	private CollectionModel<EntityModel<UserResponseDTO>> userCollectionModel;
 	
 	@BeforeEach
 	void setUp() {
 		userRequestDTO = UserTestBuilder.anUser().buildRequestDTO();
 		userUpdateRequestDTO = UserTestBuilder.anUser().buildUpdateRequestDTO();
 		userResponseDTO = UserTestBuilder.anUser().buildResponseDTO();
+		
+		userEntityModel = EntityModel.of(userResponseDTO,
+				linkTo(methodOn(UserController.class).findById(userResponseDTO.id())).withSelfRel(),
+				linkTo(methodOn(UserController.class).update(userResponseDTO.id(), null)).withRel("update"),
+				linkTo(methodOn(UserController.class).delete(userResponseDTO.id())).withRel("delete")
+		);
+		
+		userCollectionModel = CollectionModel.of(Collections.singletonList(userEntityModel),
+				linkTo(methodOn(UserController.class).findAll()).withSelfRel()
+		);
 	}
 	
-	private void assertUserResponseDTO(ResultActions resultActions, UserResponseDTO userResponseDTO) throws Exception {
-		resultActions.andExpect(jsonPath("$.id").value(userResponseDTO.id()))
-				.andExpect(jsonPath("$.name").value(userResponseDTO.name()))
-				.andExpect(jsonPath("$.email").value(userResponseDTO.email()))
-				.andExpect(jsonPath("$.phone").value(userResponseDTO.phone()))
-				.andExpect(jsonPath("$.role").value(userResponseDTO.role().name()));
+	private void assertUserEntityModel(ResultActions resultActions, UserResponseDTO expectedDto) throws Exception {
+		resultActions
+				.andExpect(jsonPath("$.id").value(expectedDto.id()))
+				.andExpect(jsonPath("$.name").value(expectedDto.name()))
+				.andExpect(jsonPath("$.email").value(expectedDto.email()))
+				.andExpect(jsonPath("$.phone").value(expectedDto.phone()))
+				.andExpect(jsonPath("$.role").value(expectedDto.role().name()))
+				.andExpect(jsonPath("$._links.self.href").exists())
+				.andExpect(jsonPath("$._links.update.href").exists())
+				.andExpect(jsonPath("$._links.delete.href").exists());
 	}
 	
-	private void assertUserResponseDTOList(ResultActions resultActions, List<UserResponseDTO> responses) throws Exception {
-		resultActions.andExpect(jsonPath("$.length()").value(responses.size()));
-		for (int i = 0; i < responses.size(); i++) {
-			UserResponseDTO response = responses.get(i);
+	private void assertUserCollectionModel(ResultActions resultActions, List<UserResponseDTO> expectedDtos) throws Exception {
+		resultActions.andExpect(jsonPath("$._embedded.userResponseDTOList.length()").value(expectedDtos.size()));
+		for (int i = 0; i < expectedDtos.size(); i++) {
+			UserResponseDTO expectedDto = expectedDtos.get(i);
 			resultActions
-					.andExpect(jsonPath("$[" + i + "].id").value(response.id()))
-					.andExpect(jsonPath("$[" + i + "].name").value(response.name()))
-					.andExpect(jsonPath("$[" + i + "].email").value(response.email()))
-					.andExpect(jsonPath("$[" + i + "].phone").value(response.phone()))
-					.andExpect(jsonPath("$[" + i + "].role").value(response.role().name()));
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "].id").value(expectedDto.id()))
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "].name").value(expectedDto.name()))
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "].email").value(expectedDto.email()))
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "].phone").value(expectedDto.phone()))
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "].role").value(expectedDto.role().name()))
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "]._links.self.href").exists())
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "]._links.update.href").exists())
+					.andExpect(jsonPath("$._embedded.userResponseDTOList[" + i + "]._links.delete.href").exists());
 		}
+		resultActions.andExpect(jsonPath("$._links.self.href").exists());
 	}
+	
 	
 	@Nested
 	@DisplayName("GET " + URL_PREFIX)
 	class FindAllUsers {
 		
 		@Test
-		@DisplayName("should return all users")
-		void shouldReturnAllUsers() throws Exception {
+		@DisplayName("should return all users with HATEOAS links")
+		void shouldReturnAllUsersWithHateoasLinks() throws Exception {
 			List<UserResponseDTO> responseList = List.of(userResponseDTO);
 			when(userService.findAll()).thenReturn(responseList);
 			
+			doReturn(userCollectionModel).when(userModelAssembler).toCollectionModel(responseList);
+			
 			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX))
 					.andExpect(status().isOk());
-			assertUserResponseDTOList(resultActions, responseList);
+			assertUserCollectionModel(resultActions, responseList);
 		}
 	}
 	
@@ -109,14 +141,14 @@ class UserControllerTest {
 	class FindUserById {
 		
 		@Test
-		@DisplayName("should return user by id")
-		void shouldReturnUserById() throws Exception {
+		@DisplayName("should return user by id with HATEOAS links")
+		void shouldReturnUserByIdWithHateoasLinks() throws Exception {
 			when(userService.findById(1L)).thenReturn(userResponseDTO);
+			doReturn(userEntityModel).when(userModelAssembler).toModel(userResponseDTO);
 			
-			assertUserResponseDTO(
-					mockMvc.perform(get(URL_PREFIX + "/{id}", 1L)).andExpect(status().isOk()),
-					userResponseDTO
-			);
+			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/{id}", 1L))
+					.andExpect(status().isOk());
+			assertUserEntityModel(resultActions, userResponseDTO);
 		}
 		
 		@Test
@@ -153,21 +185,20 @@ class UserControllerTest {
 		}
 		
 		@Test
-		@DisplayName("should create a new user")
-		void shouldCreateNewUser() throws Exception {
+		@DisplayName("should create a new user with HATEOAS links")
+		void shouldCreateNewUserWithHateoasLinks() throws Exception {
 			when(userService.create(userRequestDTO)).thenReturn(userResponseDTO);
+			doReturn(userEntityModel).when(userModelAssembler).toModel(userResponseDTO);
 			
-			assertUserResponseDTO(
-					mockMvc.perform(post(URL_PREFIX)
-									.contentType(MediaType.APPLICATION_JSON)
-									.content(objectMapper.writeValueAsString(userRequestDTO)))
-							.andExpect(status().isCreated()),
-					userResponseDTO
-			);
+			ResultActions resultActions = mockMvc.perform(post(URL_PREFIX)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(userRequestDTO)))
+					.andExpect(status().isCreated());
+			assertUserEntityModel(resultActions, userResponseDTO);
 		}
 		
 		@Test
-		@DisplayName("should return 409 when user already exists")
+		@DisplayName("should return 409 when email already exists")
 		void shouldThrowEntityUserAlreadyExistsExceptionOnCreate() throws Exception {
 			when(userService.create(userRequestDTO)).thenThrow(new EntityUserAlreadyExistsException(userRequestDTO.email()));
 			
@@ -202,17 +233,16 @@ class UserControllerTest {
 		}
 		
 		@Test
-		@DisplayName("should update user")
-		void shouldUpdateUser() throws Exception {
+		@DisplayName("should update user with HATEOAS links")
+		void shouldUpdateUserWithHateoasLinks() throws Exception {
 			when(userService.update(1L, userUpdateRequestDTO)).thenReturn(userResponseDTO);
+			doReturn(userEntityModel).when(userModelAssembler).toModel(userResponseDTO);
 			
-			assertUserResponseDTO(
-					mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
-									.contentType(MediaType.APPLICATION_JSON)
-									.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
-							.andExpect(status().isOk()),
-					userResponseDTO
-			);
+			ResultActions resultActions = mockMvc.perform(put(URL_PREFIX + "/{id}", 1L)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
+					.andExpect(status().isOk());
+			assertUserEntityModel(resultActions, userResponseDTO);
 		}
 		
 		@Test
