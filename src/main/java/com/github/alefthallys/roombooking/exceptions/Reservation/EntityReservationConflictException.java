@@ -1,4 +1,4 @@
-package com.github.alefthallys.roombooking.exceptions;
+package com.github.alefthallys.roombooking.exceptions.Reservation;
 
 import java.time.LocalDateTime;
 

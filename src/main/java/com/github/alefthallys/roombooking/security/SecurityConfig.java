@@ -28,8 +28,7 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(SecurityConstants.PUBLIC_ENDPOINTS.toArray(String[]::new)).permitAll() // Permit all public endpoints
-						.requestMatchers("/actuator/**").permitAll()
+						.requestMatchers(SecurityConstants.PUBLIC_ENDPOINTS.toArray(String[]::new)).permitAll()
 						.anyRequest().authenticated()
 				)
 				.sessionManagement(session -> session

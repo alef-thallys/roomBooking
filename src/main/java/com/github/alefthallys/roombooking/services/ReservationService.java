@@ -4,7 +4,7 @@ import com.github.alefthallys.roombooking.dtos.Email.ReservationConfirmationEmai
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationRequestDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationResponseDTO;
 import com.github.alefthallys.roombooking.dtos.Reservation.ReservationUpdateRequestDTO;
-import com.github.alefthallys.roombooking.exceptions.EntityReservationConflictException;
+import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationConflictException;
 import com.github.alefthallys.roombooking.exceptions.Reservation.EntityReservationNotFoundException;
 import com.github.alefthallys.roombooking.exceptions.Room.EntityRoomNotFoundException;
 import com.github.alefthallys.roombooking.mappers.ReservationMapper;

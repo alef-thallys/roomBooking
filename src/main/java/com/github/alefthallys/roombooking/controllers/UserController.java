@@ -4,6 +4,8 @@ import com.github.alefthallys.roombooking.dtos.User.UserRequestDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserResponseDTO;
 import com.github.alefthallys.roombooking.dtos.User.UserUpdateRequestDTO;
 import com.github.alefthallys.roombooking.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@Tag(name = "User Management")
 @RequestMapping("/api/v1/users")
 public class UserController {
 	
@@ -24,30 +27,35 @@ public class UserController {
 	
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@Operation(summary = "Find all users")
 	public ResponseEntity<List<UserResponseDTO>> findAll() {
 		return ResponseEntity.ok(userService.findAll());
 	}
 	
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN') or @userSecurity.hasUserId(#id)")
+	@Operation(summary = "Find user by ID")
 	public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
 		return ResponseEntity.ok(userService.findById(id));
 	}
 	
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@Operation(summary = "Create a new user")
 	public ResponseEntity<UserResponseDTO> create(@RequestBody @Valid UserRequestDTO userDTO) {
 		return new ResponseEntity<>(userService.create(userDTO), HttpStatus.CREATED);
 	}
 	
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN') or @userSecurity.hasUserId(#id)")
+	@Operation(summary = "Update an existing user")
 	public ResponseEntity<UserResponseDTO> update(@PathVariable Long id, @RequestBody @Valid UserUpdateRequestDTO userDTO) {
 		return ResponseEntity.ok(userService.update(id, userDTO));
 	}
 	
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN') or @userSecurity.hasUserId(#id)")
+	@Operation(summary = "Delete a user")
 	public ResponseEntity<Void> delete(@PathVariable Long id) {
 		userService.delete(id);
 		return ResponseEntity.noContent().build();

@@ -11,6 +11,8 @@ import com.github.alefthallys.roombooking.models.User;
 import com.github.alefthallys.roombooking.security.CustomUserDetailsService;
 import com.github.alefthallys.roombooking.security.jwt.JwtTokenProvider;
 import com.github.alefthallys.roombooking.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication Management")
 public class AuthController {
 	
 	private final AuthenticationManager authenticationManager;
@@ -38,18 +41,21 @@ public class AuthController {
 	}
 	
 	@GetMapping("/me")
+	@Operation(summary = "Get current authenticated user")
 	public ResponseEntity<UserResponseDTO> getCurrentUser() {
 		User currentUser = jwtTokenProvider.getCurrentUser();
 		return ResponseEntity.ok(UserMapper.toDto(currentUser));
 	}
 	
 	@PostMapping("/register")
+	@Operation(summary = "Register a new user")
 	public ResponseEntity<UserResponseDTO> register(@RequestBody @Valid UserRequestDTO userRequestDTO) {
 		UserResponseDTO userResponseDTO = userService.create(userRequestDTO);
 		return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
 	}
 	
 	@PostMapping("/login")
+	@Operation(summary = "User login")
 	public ResponseEntity<JwtResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequest) {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password()));
@@ -59,6 +65,7 @@ public class AuthController {
 	}
 	
 	@PostMapping("/refresh-token")
+	@Operation(summary = "Refresh access token using refresh token")
 	public ResponseEntity<JwtResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenRequestDTO request) {
 		String refreshToken = request.refreshToken();
 		
