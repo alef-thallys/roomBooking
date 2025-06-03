@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -54,13 +55,25 @@ public class GlobalExceptionHandler {
 						error.getRejectedValue()))
 				.toList();
 		
+		List<FieldErrorDTO> globalErrors = ex.getBindingResult().getGlobalErrors().stream()
+				.map(error -> new FieldErrorDTO(
+						error.getObjectName(),
+						error.getDefaultMessage(),
+						null))
+				.toList();
+		
+		List<FieldErrorDTO> allErrors = new ArrayList<>();
+		allErrors.addAll(fieldErrors);
+		allErrors.addAll(globalErrors);
+		
 		ErrorResponseDTO errorResponse = new ErrorResponseDTO(
 				HttpStatus.BAD_REQUEST.value(),
 				HttpStatus.BAD_REQUEST.getReasonPhrase(),
 				"Invalid request body format or missing content",
 				request.getRequestURI(),
-				fieldErrors
+				allErrors
 		);
+		
 		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 	}
 	

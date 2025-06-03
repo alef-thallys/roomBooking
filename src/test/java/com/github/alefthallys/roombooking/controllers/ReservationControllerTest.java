@@ -213,7 +213,7 @@ public class ReservationControllerTest {
 		@Test
 		@DisplayName("should return a reservation by ID for the current user with HATEOAS links")
 		void shouldReturnMyReservationByIdWithHateoasLinks() throws Exception {
-			when(reservationService.findByIdForUser(1L)).thenReturn(reservationResponseDTO);
+			when(reservationService.findReservationByIdAndUserId(1L)).thenReturn(reservationResponseDTO);
 			doReturn(reservationEntityModel).when(reservationModelAssembler).toModel(reservationResponseDTO);
 			
 			ResultActions resultActions = mockMvc.perform(get(URL_PREFIX + "/me/{id}", 1L))
@@ -224,7 +224,7 @@ public class ReservationControllerTest {
 		@Test
 		@DisplayName("should return 404 when reservation not found for current user")
 		void shouldThrowMethodNotFoundIfReservationNotFoundForUser() throws Exception {
-			when(reservationService.findByIdForUser(1L)).thenThrow(new EntityReservationNotFoundException(1L));
+			when(reservationService.findReservationByIdAndUserId(1L)).thenThrow(new EntityReservationNotFoundException(1L));
 			
 			mockMvc.perform(get(URL_PREFIX + "/me/{id}", 1L))
 					.andExpect(status().isNotFound())

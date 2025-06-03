@@ -61,7 +61,7 @@ public class ReservationController {
 	@PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
 	@Operation(summary = "Find reservation by ID for the current user")
 	public ResponseEntity<EntityModel<ReservationResponseDTO>> findByIdForUser(@PathVariable Long id) {
-		ReservationResponseDTO reservationResponseDTO = reservationService.findByIdForUser(id);
+		ReservationResponseDTO reservationResponseDTO = reservationService.findReservationByIdAndUserId(id);
 		EntityModel<ReservationResponseDTO> model = reservationModelAssembler.toModel(reservationResponseDTO);
 		return ResponseEntity.ok(model);
 	}

@@ -70,10 +70,10 @@ public class ReservationService {
 	}
 	
 	@Transactional(readOnly = true)
-	public ReservationResponseDTO findByIdForUser(Long id) {
+	public ReservationResponseDTO findReservationByIdAndUserId(Long id) {
 		validateIdOrThrowException(id);
 		Long userId = jwtTokenProvider.getCurrentUser().getId();
-		Reservation reservationById = reservationRepository.findByIdForUser(id, userId)
+		Reservation reservationById = reservationRepository.findReservationByIdAndUserId(id, userId)
 				.orElseThrow(() -> new EntityReservationNotFoundException(id));
 		return ReservationMapper.toDto(reservationById);
 	}
