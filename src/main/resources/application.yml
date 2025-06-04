@@ -4,9 +4,9 @@ spring:
 
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:3306/room_booking
-    username: root
-    password: 87249293a
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
@@ -22,11 +22,23 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-    rabbitmq:
-      host: localhost
-      port: 5672
-      username: guest
-      password: guest
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST}
+    port: ${SPRING_RABBITMQ_PORT}
+    username: ${SPRING_RABBITMQ_USERNAME}
+    password: ${SPRING_RABBITMQ_PASSWORD}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 management:
   endpoints:
@@ -47,12 +59,18 @@ logging:
     root: warn
     com.github.alefthallys: info
 
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
 jwt:
-  secret: dTRwSGUxZ0hZIWRuTThuQXEzVkpAdkx5eFJzI1RwQlpyVzdjWmY5Nm0yQHFYOVdtRlM=
-  expiration: 86400000 # 24h
-  issuer: roomBooking
-  audience: roomBooking
-  header: Authorization
-  prefix: Bearer
-  refreshSecret: aDNzSDFsNXBjMnQ4VjQ1ZzVjNjBqZjd3eTNxMjdyOWUxNmQwazQ5Z3cxY2Myc2Q0ZDNlMnMzZnA3YjFzZDNmNGc1NA== # Add this line (Example: 7 days expiration)
-  refreshExpiration: 604800000 # 7 days
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  issuer: ${JWT_ISSUER}
+  audience: ${JWT_AUDIENCE}
+  header: ${JWT_HEADER}
+  prefix: ${JWT_PREFIX}
+  refreshSecret: ${JWT_REFRESHSECRET}
+  refreshExpiration: ${JWT_REFRESHEXPIRATION}

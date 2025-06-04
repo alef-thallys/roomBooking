@@ -74,6 +74,7 @@ class AuthServiceTest {
 			assertThrows(ForbiddenException.class, () -> authService.validateUserOwnership(ownerUser));
 		}
 		
+		
 		@Test
 		@DisplayName("Should throw ForbiddenException when JwtTokenProvider throws InvalidJwtException")
 		void shouldThrowForbiddenExceptionWhenJwtTokenProviderThrowsInvalidJwtException() {

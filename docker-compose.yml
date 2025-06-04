@@ -1,6 +1,30 @@
 version: '3.8'
 
 services:
+  mariadb:
+    image: mariadb:10.6
+    environment:
+      MARIADB_ROOT_PASSWORD: 87249293a
+      MARIADB_DATABASE: room_booking
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - roombooking-network
+
+  flyway:
+    image: flyway/flyway:9.10.2
+    environment:
+      FLYWAY_URL: jdbc:mariadb://mariadb:3306/room_booking
+      FLYWAY_USER: root
+      FLYWAY_PASSWORD: 87249293a
+    command: migrate
+    depends_on:
+      - mariadb
+    networks:
+      - roombooking-network
+
   app:
     build:
       context: .
@@ -17,6 +41,9 @@ services:
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
 
+      MAIL_USERNAME: your_mail@gmail.com
+      MAIL_PASSWORD: your_mail_password
+
       JWT_SECRET: dTRwSGUxZ0hZIWRuTThuQXEzVkpAdkx5eFJzI1RwQlpyVzdjWmY5Nm0yQHFYOVdtRlM=
       JWT_EXPIRATION: 86400000
       JWT_ISSUER: roomBooking
@@ -30,18 +57,7 @@ services:
     depends_on:
       - mariadb
       - rabbitmq
-    networks:
-      - roombooking-network
-
-  mariadb:
-    image: mariadb:10.6
-    environment:
-      MARIADB_ROOT_PASSWORD: 87249293a
-      MARIADB_DATABASE: room_booking
-    ports:
-      - "3306:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
+      - flyway
     networks:
       - roombooking-network
 

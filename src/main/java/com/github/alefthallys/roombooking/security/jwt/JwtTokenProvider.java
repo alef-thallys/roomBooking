@@ -24,9 +24,9 @@ public class JwtTokenProvider {
 	
 	private final JwtProperties jwtProperties;
 	private final Clock clock;
+	private final UserRepository userRepository;
 	private Key secretKey;
 	private Key refreshSecretKey;
-	private UserRepository userRepository;
 	
 	@Autowired
 	public JwtTokenProvider(JwtProperties jwtProperties, UserRepository userRepository) {
