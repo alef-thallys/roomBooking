@@ -4,7 +4,7 @@ services:
   mariadb:
     image: mariadb:10.6
     environment:
-      MARIADB_ROOT_PASSWORD: 87249293a
+      MARIADB_ROOT_PASSWORD: 12345678
       MARIADB_DATABASE: room_booking
     ports:
       - "3306:3306"
@@ -18,7 +18,7 @@ services:
     environment:
       FLYWAY_URL: jdbc:mariadb://mariadb:3306/room_booking
       FLYWAY_USER: root
-      FLYWAY_PASSWORD: 87249293a
+      FLYWAY_PASSWORD: 12345678
     command: migrate
     depends_on:
       - mariadb
@@ -34,7 +34,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/room_booking
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 87249293a
+      SPRING_DATASOURCE_PASSWORD: 12345678
 
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
