@@ -1,18 +1,20 @@
 # Room Booking Application
 
-A robust Spring Boot project for seamless room reservations. This application exposes a suite of RESTful APIs for user, room, and reservation management, secured by JWT authentication and authorization. Data persistence is managed by MariaDB with Flyway migrations, and RabbitMQ powers asynchronous email notifications.
+A **robust, production-grade Spring Boot application** for seamless room reservations. This project exposes a comprehensive set of RESTful APIs for managing users, rooms, and reservations, all protected with JWT authentication and authorization. Data persistence is handled by MariaDB with Flyway-managed migrations, while RabbitMQ powers asynchronous email notifications for key reservation events.
 
 ---
 
 ## Table of Contents
 
 - [Features](#features)
-- [Technologies Used](#technologies-used)
+- [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
-    - [Building the Project](#building-the-project)
-    - [Running with Docker Compose](#running-with-docker-compose)
-    - [Running Natively](#running-natively)
+    - [Clone & Setup](#clone--setup)
+    - [Environment Configuration](#environment-configuration)
+    - [Build & Run with Docker Compose](#build--run-with-docker-compose)
+    - [Exporting Environment Variables with Bash](#exporting-environment-variables-with-bash)
+    - [Run Natively (Local Development)](#run-natively-local-development)
 - [API Documentation (Swagger UI)](#api-documentation-swagger-ui)
 - [Database Schema](#database-schema)
 - [Default Admin User](#default-admin-user)
@@ -25,37 +27,35 @@ A robust Spring Boot project for seamless room reservations. This application ex
 
 ## Features
 
-- **User Management**: Full CRUD operations with role-based access control (ADMIN, USER).
-- **Room Management**: Manage rooms with capacity, description, and location.
-- **Reservation Management**: Create, view, update, and delete reservations with conflict checking.
-- **Authentication & Authorization**: Secure endpoints using JWT (with refresh token support) and RBAC.
-- **Email Notifications**: Asynchronous confirmations using RabbitMQ.
-- **Database Management**: MariaDB with Flyway migrations.
-- **API Documentation**: Interactive docs via SpringDoc OpenAPI (Swagger UI).
-- **Auditing**: Automatic creation/modification tracking for entities.
-- **HATEOAS**: Discoverable APIs via hypermedia links.
-- **Input Validation**: Robust request validation.
-- **Global Exception Handling**: Consistent JSON error responses.
+- **User Management**: Full CRUD with role-based access (ADMIN, USER).
+- **Room Management**: Create, update, and delete rooms, specifying capacity, description, and location.
+- **Reservation Management**: Make, view, update, and cancel reservations with automatic conflict prevention.
+- **Authentication & Authorization**: Secure endpoints via JWT (access & refresh tokens) and RBAC.
+- **Email Notifications**: Asynchronous reservation confirmations and updates via RabbitMQ.
+- **Database Versioning**: Automatic schema evolution and seed data using Flyway migrations.
+- **Interactive API Docs**: Swagger UI via SpringDoc OpenAPI.
+- **Auditing**: Automatic tracking of entity creation and updates.
+- **HATEOAS**: Hypermedia-driven REST APIs.
+- **Input Validation**: Extensive request validation with detailed error messages.
+- **Global Error Handling**: Uniform JSON error responses.
 
 ---
 
-## Technologies Used
+## Tech Stack
 
-- **Spring Boot**: `3.4.5`
-- **Java**: `17`
-- **Maven**: Build automation
-- **MariaDB**: Relational database
-- **Flyway**: Database migrations
-- **Spring Data JPA**: ORM
-- **Spring Security**: Auth & RBAC
-- **JWT**: Token-based auth
-- **RabbitMQ**: Message broker
-- **Spring AMQP**: RabbitMQ integration
-- **Spring Mail**: Email
-- **Lombok**: Reduces boilerplate
-- **SpringDoc OpenAPI/Swagger UI**: API documentation
-- **Spring HATEOAS**: Hypermedia links
-- **Docker**: Containerization
+- **Spring Boot** `3.4.5`
+- **Java** `17`
+- **Maven**
+- **MariaDB**
+- **Flyway** (DB migrations)
+- **Spring Data JPA**
+- **Spring Security** (JWT)
+- **RabbitMQ** (Async messaging)
+- **Spring AMQP**, **Spring Mail**
+- **Lombok**
+- **SpringDoc OpenAPI / Swagger UI**
+- **Spring HATEOAS**
+- **Docker & Docker Compose**
 
 ---
 
@@ -65,65 +65,82 @@ A robust Spring Boot project for seamless room reservations. This application ex
 
 - **Java 17+**
 - **Maven 3.x**
-- **Docker & Docker Compose** (recommended)
+- **Docker & Docker Compose** (recommended for easy setup)
 
 ---
 
-### Building the Project
+### Clone & Setup
 
-From the `roomBooking` directory:
-
-```
-mvn clean install
-```
-
-This compiles, tests, and packages the app as a JAR.
-
----
-
-### Running with Docker Compose
-
-Docker Compose sets up MariaDB, Flyway, RabbitMQ, and the application.
-
-1. **Navigate to project root:**
-
-```
+```bash
+git clone https://github.com/alef-thallys/roomBooking.git
 cd roomBooking
 ```
 
-2. **Configure Environment:**
+---
 
-   Update `MAIL_USERNAME` and `MAIL_PASSWORD` in `docker-compose.yml` for your SMTP service (e.g., with a Gmail App Password if needed).
+### Environment Configuration
 
+All required environment variables are listed in `.env.example`.
 
-3. **Build the Application:**
+Copy the example file and fill in your credentials:
 
-```
-mvn clean package -DskipTests
-```
-
-4. **Start Services:**
-
-```
-docker-compose up --build
+```bash
+cp .env.example .env
 ```
 
-    - Builds the app Docker image.
-    - Starts MariaDB, RabbitMQ, runs Flyway migrations, and launches the app.
+Update `.env` with your values:
 
-Access: [http://localhost:8080](http://localhost:8080)
+- Database credentials
+- Mail credentials (`MAIL_USERNAME`, `MAIL_PASSWORD` — e.g., Gmail App Password)
+- Strong secrets for `JWT_SECRET` and `JWT_REFRESHSECRET`
+
+**Never commit real credentials or secrets to source control.**
 
 ---
 
-### Running Natively
+### Build & Run with Docker Compose
 
-If not using Docker Compose:
+Docker Compose will provision MariaDB, RabbitMQ, run Flyway migrations, and start the application.
 
-1. **Start MariaDB & RabbitMQ manually**
-    - MariaDB on `3306`, with database `room_booking`.
-    - RabbitMQ on `5672`, default `guest/guest`.
+1. **Build the Application**
 
-2. **Configure `application.yml`**
+    ```bash
+    mvn clean package -DskipTests
+    ```
+
+2. **Start All Services**
+
+    ```bash
+    docker-compose up --build
+    ```
+
+- The app will be available at [http://localhost:8080](http://localhost:8080)
+- API documentation: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+---
+
+### Exporting Environment Variables with Bash (optional)
+
+This step is **just for users who want to run the application natively** (without Docker). By exporting environment variables from your `.env` file, you ensure that commands like `mvn spring-boot:run` or `java -jar ...` will use your configuration.
+
+```bash
+source .env
+```
+
+> **Tip:**
+> - Do not add spaces around the `=`, and wrap values with spaces or special characters in quotes.
+> - Alternatively, use `export $(grep -v '^#' .env | xargs)`, but `source .env` is more robust for quoted values.
+> - Never use this command in production or share your `.env` file with sensitive data!
+
+---
+
+### Run Natively (Local Development)
+
+1. **Start MariaDB & RabbitMQ Manually**
+    - MariaDB on `3306`, database `room_booking`
+    - RabbitMQ on `5672` (user: `guest`/`guest`)
+
+2. **Configure `src/main/resources/application.yml`** (or use environment variables):
 
    ```yaml
    spring:
@@ -139,37 +156,31 @@ If not using Docker Compose:
      mail:
        username: your_mail@gmail.com
        password: your_mail_password
-   ```
 
-   Set JWT secrets as env vars or in `application.yml`:
-
-   ```yaml
    jwt:
-     secret: ${JWT_SECRET:...}
-     refreshSecret: ${JWT_REFRESHSECRET:...}
+     secret: ${JWT_SECRET:your_jwt_secret}
+     refreshSecret: ${JWT_REFRESHSECRET:your_jwt_refresh_secret}
    ```
 
-3. **Apply Flyway Migrations** (runs with Maven build):
+3. **Apply Flyway Migrations** (runs on Maven build):
 
-```
-mvn clean install
-```
+    ```bash
+    mvn clean install
+    ```
 
 4. **Run the App:**
 
-```
-mvn spring-boot:run
-# or
-java -jar target/roombooking-0.0.1-SNAPSHOT.jar
-```
+    ```bash
+    mvn spring-boot:run
+    # or
+    java -jar target/roombooking-0.0.1-SNAPSHOT.jar
+    ```
 
 ---
 
 ## API Documentation (Swagger UI)
 
-Once running, access the interactive API docs at:
-
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ---
 
@@ -177,9 +188,9 @@ Once running, access the interactive API docs at:
 
 Schema managed by Flyway. Main tables:
 
-- **users**: User info (name, email, password, phone, role, auditing)
-- **rooms**: Room details (name, description, capacity, location, auditing)
-- **reservations**: Reservation info (start/end date, user, room, auditing)
+- **users**: name, email, password, phone, role, auditing fields
+- **rooms**: name, description, capacity, location, auditing fields
+- **reservations**: start/end date, user, room, auditing fields
 
 Initial data loaded via:
 
@@ -191,13 +202,13 @@ Initial data loaded via:
 
 ## Default Admin User
 
-On first startup, an admin is created if missing:
+On first startup, an admin account is created if missing:
 
-- **Email**: `admin@admin.com`
-- **Password**: `admin123`
-- **Role**: `ADMIN`
+- **Email:** `admin@admin.com`
+- **Password:** `admin123`
+- **Role:** `ADMIN`
 
-Use this for admin tasks.
+> **Change this password immediately in production!**
 
 ---
 
@@ -206,23 +217,24 @@ Use this for admin tasks.
 ```
 roomBooking/
 ├── src/main/java/com/github/alefthallys/roombooking/
-│   ├── RoomBookingApplication.java      # Main entry
+│   ├── RoomBookingApplication.java      # Main entry point
 │   ├── annotations/                     # Custom annotations
 │   ├── assemblers/                      # HATEOAS assemblers
 │   ├── config/                          # Configurations
 │   ├── controllers/                     # REST controllers
-│   ├── dtos/                            # DTOs
+│   ├── dtos/                            # Data Transfer Objects
 │   ├── exceptions/                      # Custom/global exceptions
 │   ├── mappers/                         # Entity-DTO mappers
-│   ├── messaging/                       # RabbitMQ consumer
+│   ├── messaging/                       # RabbitMQ consumers/producers
 │   ├── models/                          # JPA entities
-│   ├── repositories/                    # JPA repos
-│   ├── security/                        # Security/JWT
+│   ├── repositories/                    # JPA repositories
+│   ├── security/                        # Security/JWT logic
 │   ├── services/                        # Business logic
 │   └── validadors/                      # Validators
 ├── src/main/resources/
 │   ├── application.yml
-│   └── db/migration/                    # Flyway scripts
+│   └── db/migration/                    # Flyway migration scripts
+├── .env.example                         # Example environment file
 └── src/test/java/com/github/alefthallys/roombooking/
     ├── RoomBookingApplicationTests.java
     ├── controllers/
@@ -236,16 +248,16 @@ roomBooking/
 
 ## Error Handling
 
-A global exception handler provides consistent JSON error responses for:
+A global exception handler ensures consistent JSON error responses:
 
-- **400 Bad Request**: Validation, malformed input
-- **401 Unauthorized**: Auth failures
+- **400 Bad Request**: Validation/malformed input
+- **401 Unauthorized**: Authentication failures
 - **403 Forbidden**: Access denied
 - **404 Not Found**: Entity missing
-- **409 Conflict**: Duplicate/conflict
-- **500 Internal Server Error**: Fallback
+- **409 Conflict**: Duplicates/conflicts
+- **500 Internal Server Error**: Unhandled errors
 
-Example error response:
+Example response:
 
 ```json
 {
@@ -268,9 +280,9 @@ Example error response:
 
 ## Testing
 
-Unit and integration tests are under `src/test/java`. Run all tests:
+Unit and integration tests are under `src/test/java`. To run:
 
-```
+```bash
 mvn test
 ```
 
@@ -278,4 +290,4 @@ mvn test
 
 ## License
 
-MIT License. See the [LICENSE](LICENSE) file for details.
+Licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

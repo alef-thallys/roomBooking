@@ -8,20 +8,6 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
-  jpa:
-    database-platform: org.hibernate.dialect.MariaDBDialect
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-    hibernate:
-      ddl-auto: none
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST}
     port: ${SPRING_RABBITMQ_PORT}
@@ -39,6 +25,30 @@ spring:
           auth: true
           starttls:
             enable: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  issuer: ${JWT_ISSUER}
+  audience: ${JWT_AUDIENCE}
+  header: ${JWT_HEADER}
+  prefix: ${JWT_PREFIX}
+  refreshSecret: ${JWT_REFRESHSECRET}
+  refreshExpiration: ${JWT_REFRESHEXPIRATION}
+
+  jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 management:
   endpoints:
@@ -64,13 +74,3 @@ springdoc:
     enabled: true
   api-docs:
     enabled: true
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-  issuer: ${JWT_ISSUER}
-  audience: ${JWT_AUDIENCE}
-  header: ${JWT_HEADER}
-  prefix: ${JWT_PREFIX}
-  refreshSecret: ${JWT_REFRESHSECRET}
-  refreshExpiration: ${JWT_REFRESHEXPIRATION}

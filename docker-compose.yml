@@ -4,26 +4,36 @@ services:
   mariadb:
     image: mariadb:10.6
     environment:
-      MARIADB_ROOT_PASSWORD: 12345678
-      MARIADB_DATABASE: room_booking
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
     ports:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
       - roombooking-network
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   flyway:
     image: flyway/flyway:9.10.2
     environment:
-      FLYWAY_URL: jdbc:mariadb://mariadb:3306/room_booking
-      FLYWAY_USER: root
-      FLYWAY_PASSWORD: 12345678
+      FLYWAY_URL: ${FLYWAY_URL}
+      FLYWAY_USER: ${FLYWAY_USER}
+      FLYWAY_PASSWORD: ${FLYWAY_PASSWORD}
     command: migrate
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - roombooking-network
+    env_file:
+      - .env
 
   app:
     build:
@@ -32,34 +42,39 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/room_booking
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 12345678
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
 
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_RABBITMQ_HOST: ${SPRING_RABBITMQ_HOST}
+      SPRING_RABBITMQ_PORT: ${SPRING_RABBITMQ_PORT}
+      SPRING_RABBITMQ_USERNAME: ${SPRING_RABBITMQ_USERNAME}
+      SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD}
 
-      MAIL_USERNAME: your_mail@gmail.com
-      MAIL_PASSWORD: your_mail_password
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
 
-      JWT_SECRET: dTRwSGUxZ0hZIWRuTThuQXEzVkpAdkx5eFJzI1RwQlpyVzdjWmY5Nm0yQHFYOVdtRlM=
-      JWT_EXPIRATION: 86400000
-      JWT_ISSUER: roomBooking
-      JWT_AUDIENCE: roomBooking
-      JWT_HEADER: Authorization
-      JWT_PREFIX: Bearer
-      JWT_REFRESHSECRET: aDNzSDFsNXBjMnQ4VjQ1ZzVjNjBqZjd3eTNxMjdyOWUxNmQwazQ5Z3cxY2Myc2Q0ZDNlMnMzZnA3YjFzZDNmNGc1NA==
-      JWT_REFRESHEXPIRATION: 604800000
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_AUDIENCE: ${JWT_AUDIENCE}
+      JWT_HEADER: ${JWT_HEADER}
+      JWT_PREFIX: ${JWT_PREFIX}
+      JWT_REFRESHSECRET: ${JWT_REFRESHSECRET}
+      JWT_REFRESHEXPIRATION: ${JWT_REFRESHEXPIRATION}
 
-      JAVA_TOOL_OPTIONS: "-XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -XX:NativeMemoryTracking=summary -XX:+AlwaysPreTouch -Djdk.internal.lambda.disableEagerInitialization=true -Djdk.internal.platform.Container.enabled=false"
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     depends_on:
-      - mariadb
-      - rabbitmq
-      - flyway
+      mariadb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      flyway:
+        condition: service_completed_successfully
     networks:
       - roombooking-network
+    env_file:
+      - .env
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -67,10 +82,12 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     networks:
       - roombooking-network
+    env_file:
+      - .env
 
 networks:
   roombooking-network:
