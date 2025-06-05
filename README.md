@@ -1,3 +1,5 @@
+> 🇧🇷 Este projeto possui uma versão em português deste arquivo em [README.pt-br.md](README.pt-br.md)
+
 # Room Booking Application
 
 A **robust, production-grade Spring Boot application** for seamless room reservations. This project exposes a
