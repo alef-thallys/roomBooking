@@ -1,6 +1,9 @@
 # Room Booking Application
 
-A **robust, production-grade Spring Boot application** for seamless room reservations. This project exposes a comprehensive set of RESTful APIs for managing users, rooms, and reservations, all protected with JWT authentication and authorization. Data persistence is handled by MariaDB with Flyway-managed migrations, while RabbitMQ powers asynchronous email notifications for key reservation events.
+A **robust, production-grade Spring Boot application** for seamless room reservations. This project exposes a
+comprehensive set of RESTful APIs for managing users, rooms, and reservations, all protected with JWT authentication and
+authorization. Data persistence is handled by MariaDB with Flyway-managed migrations, while RabbitMQ powers asynchronous
+email notifications for key reservation events.
 
 ---
 
@@ -121,7 +124,9 @@ Docker Compose will provision MariaDB, RabbitMQ, run Flyway migrations, and star
 
 ### Exporting Environment Variables with Bash (optional)
 
-This step is **just for users who want to run the application natively** (without Docker). By exporting environment variables from your `.env` file, you ensure that commands like `mvn spring-boot:run` or `java -jar ...` will use your configuration.
+This step is **just for users who want to run the application natively** (without Docker). By exporting environment
+variables from your `.env` file, you ensure that commands like `mvn spring-boot:run` or `java -jar ...` will use your
+configuration.
 
 ```bash
 source .env
